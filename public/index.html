@@ -1599,10 +1599,15 @@ showDeliverySteps(pixCode);
     await pause(800);
     
     // 1. Envia a mensagem PRIMEIRO
-    await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
-    
-    // 3. Adiciona o card de status de pagamento DEPOIS da mensagem
-    addProfessionalStatusCard();
+await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+
+// Adiciona um atraso de 300ms antes de mostrar o card
+await pause(300);
+
+// 3. Adiciona o card de status de pagamento DEPOIS da mensagem
+addProfessionalStatusCard();
+
+
     
     // 4. Finaliza o passo do fluxo
     window._currentFlowStep = 9; 
