@@ -1,0 +1,16 @@
+{
+  "name": "chat-realtime-server",
+  "version": "1.0.0",
+  "description": "Backend server for real-time chat using Socket.IO",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "Manus AI",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}
