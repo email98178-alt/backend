@@ -1351,17 +1351,19 @@ function showOrderConfirmation() {
     currentConfirmationBlock = document.createElement('div');
     currentConfirmationBlock.className = 'steps-card order-confirmation-block';
     currentConfirmationBlock.innerHTML = `
-      <div class="steps-title">Confirmar Pedido</div>
-      <div style="margin-bottom:15px;padding:12px;background:var(--surface-2);border-radius:12px;border:1px solid var(--border-2);">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;">${ORDER.productName} (x${ORDER.productQty})</div>
-        <div style="font-size:11px;color:var(--text-3);line-height:1.4;">Entregar em: ${ORDER.address || '—'}</div>
-        <div style="font-size:14px;font-weight:800;color:var(--brand);margin-top:8px;">Total: R$ ${ORDER.productPrice.toFixed(2).replace('.',',')}</div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button class="modal-btn" id="btnCorrect" style="flex:1.4;background:var(--brand);padding:10px;font-size:13px;">Sim, Prosseguir</button>
-        <button class="modal-btn" id="btnChange" style="flex:1;background:#fff;color:var(--text-2);border:1.5px solid var(--border);padding:10px;font-size:13px;box-shadow:none;">Alterar</button>
-      </div>
-    `;
+      <div style="display:flex;align-items:center;gap:12px;padding:8px;background:var(--surface-2);border-radius:12px;margin-bottom:8px;border:1px solid var(--border-2);">
+        ${p.p ? `<img src="${p.p}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;">` : ''}
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.2;">${p.n}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Qtd: ${p.q} · R$ ${(p.v*(p.q||1)).toFixed(2).replace('.',',')}</div>
+        </div>
+      </div>`).join('')
+    : `<div style="display:flex;align-items:center;gap:12px;padding:8px;background:var(--surface-2);border-radius:12px;margin-bottom:8px;border:1px solid var(--border-2);">
+        <div style="flex:1;">
+          <div style="font-size:13px;font-weight:600;color:var(--text);">${ORDER.productName}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Qtd: ${ORDER.productQty} · R$ ${ORDER.productPrice.toFixed(2).replace('.',',')}</div>
+        </div>
+      </div>`;
     msgsEl.appendChild(currentConfirmationBlock);
     scrollDown();
 
