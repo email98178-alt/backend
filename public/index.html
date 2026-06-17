@@ -1598,37 +1598,32 @@ showDeliverySteps(pixCode);
 
 
 // Pausa após o card do Pix ser exibido, antes de qualquer outra ação
-await pause(1500);
-
-// Adiciona o card de status de pagamento (aguardando Pix) imediatamente após o card do Pix
-addProfessionalStatusCard();
-
-    // Pausa após o card do Pix ser exibido
     await pause(1500);
     
-    // Mensagem de acompanhamento ANTES do card de status
+    // 1. Primeiro envia a mensagem
     await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
     
-    // Pequena pausa para naturalidade
-    await pause(1200);
+    // 2. Pequena pausa para a mensagem carregar antes do card
+    await pause(1000);
     
-    // Agora adiciona o card de status de pagamento
+    // 3. Agora adiciona o card de status de pagamento
     addProfessionalStatusCard();
     
+    // 4. Atualiza o status do fluxo
     window._currentFlowStep = 9; 
     saveChatHistory();
 
-    // Timer de segurança para reexibir o card se necessário
+    // 5. Timer de segurança (caso o pagamento demore mais de 4 min)
     setTimeout(() => {
       if (!window._paymentConfirmed) {
-        // Verifica se o card já não está na tela antes de adicionar
-        const existingCard = document.querySelector('.payment-status-card');
-        if (!existingCard) {
+        // Verifica se o card já não existe para não duplicar
+        if (!document.querySelector('.payment-status-card')) {
             addProfessionalStatusCard();
             saveChatHistory();
         }
       }
-    }, 4 * 60 * 1000); 
+    }, 4 * 60 * 1000);
+
   }
 }
 
