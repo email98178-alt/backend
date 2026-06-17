@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Monitoramento de Chats</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .chat-list { border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 300px; max-height: 500px; overflow-y: auto; background: #f9f9f9; }
+        .chat-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .chat-item:last-child { border-bottom: none; }
+        .chat-item span { font-weight: bold; color: #0F5BA8; }
+        .chat-item p { margin: 0; font-size: 0.9em; color: #555; }
+        .message-entry { background: #e6f7ff; padding: 5px; border-radius: 3px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Monitoramento de Chats em Tempo Real</h1>
+        <div id="admin-chat-list" class="chat-list">
+            <!-- Chats e mensagens aparecerão aqui -->
+        </div>
+    </div>
+
+    <script>
+        const SOCKET_SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'SUA_URL_DO_RENDER_AQUI';
+        const socket = io(SOCKET_SERVER_URL);
+        const adminId = 'admin_console'; // ID fixo para o console admin
+
+        socket.on('connect', () => {
+            console.log('Admin conectado:', socket.id);
+            socket.emit('join', { userId: adminId, isAdmin: true });
+        });
+
+        socket.on('new_message_for_admin', (message) => {
+            console.log('Nova mensagem para admin:', message);
+            addAdminMessage(message);
+        });
+
+        function addAdminMessage(message) {
+            const chatList = document.getElementById('admin-chat-list');
+            let userChatDiv = document.getElementById(`chat-${message.userId}`);
+
+            if (!userChatDiv) {
+                userChatDiv = document.createElement('div');
+                userChatDiv.id = `chat-${message.userId}`;
+                userChatDiv.className = 'chat-item';
+                userChatDiv.innerHTML = `
+                    <div>
+                        <span>Usuário: ${message.userId}</span>
+                        <div class="messages-container"></div>
+                    </div>
+                `;
+                chatList.prepend(userChatDiv); // Adiciona novos chats no topo
+            }
+
+            const messagesContainer = userChatDiv.querySelector('.messages-container');
+            const messageEntry = document.createElement('p');
+            messageEntry.className = 'message-entry';
+            messageEntry.textContent = `${message.sender}: ${message.text} (${new Date(message.timestamp).toLocaleTimeString()})`;
+            messagesContainer.appendChild(messageEntry);
+
+            // Scroll para a última mensagem
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+</body>
+</html>
