@@ -64,11 +64,22 @@ io.on('connection', (socket) => {
     
     console.log(`Mensagem de ${sender} (${userId}): ${text}`);
 
-    // Enviar para o usuário destino
-    io.to(userId).emit('receive_message', message);
+    /**
+     * CORREÇÃO:
+     * Usamos 'socket.to().emit()' em vez de 'io.to().emit()'.
+     * O 'socket.to()' envia a mensagem para todos na sala EXCETO para o remetente (o socket atual).
+     * Isso evita que o usuário ou admin receba a própria mensagem de volta via socket,
+     * o que geralmente causa a duplicidade na interface.
+     */
 
-    // Enviar para todos os admins
-    io.to('admins').emit('new_message_for_admin', message);
+    // Enviar para o usuário destino (ou admin que está na sala do usuário)
+    socket.to(userId).emit('receive_message', message);
+
+    // Enviar para todos os outros admins
+    socket.to('admins').emit('new_message_for_admin', message);
+    
+    // Opcional: Confirmar para o remetente que a mensagem foi processada
+    // socket.emit('message_sent_confirm', { status: 'ok' });
   });
 
   socket.on('disconnect', () => {
