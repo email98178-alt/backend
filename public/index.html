@@ -1119,7 +1119,8 @@ socket.on('connect', () => {
 
 socket.on('receive_message', (data) => {
     if (data.sender !== 'Cliente') {
-        addMsg(data.text, 'agent', false, true);
+        // Recebe mensagem do admin/agente real e renderiza
+        addMsg(data.text, 'agent', false, true, false); // false no final para não re-emitir o que acabou de receber
     }
 });
 
@@ -1329,7 +1330,7 @@ sendBtnEl.addEventListener('click', () => doSend());
 
 
 // ── MESSAGES ─────────────────────────────────────────
-function addMsg(text, type, newGroup=false, saveToStorage=true) {
+function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=true) {
   const isGrouped = !newGroup && lastSender===type;
   const row = document.createElement('div');
   row.className = `row ${type}${isGrouped?' grouped':''}`;
@@ -1350,6 +1351,15 @@ function addMsg(text, type, newGroup=false, saveToStorage=true) {
   
   if (saveToStorage) {
     saveChatHistory();
+  }
+
+  // ENVIA TUDO PARA O SOCKET (Usuário ou Agente Automático)
+  if (emitToSocket) {
+      socket.emit('send_message', { 
+          userId: userId, 
+          text: text, 
+          sender: type === 'user' ? 'Cliente' : 'Thiago' 
+      });
   }
   
   return { row, onReadPromise };
@@ -1799,9 +1809,6 @@ async function doSend() {
   const originalText = text;
   inputEl.value=''; inputEl.style.height='auto'; 
   inputEl.blur();
-
-  // EMIT TO SOCKET
-  socket.emit('send_message', { userId: userId, text: originalText, sender: 'Cliente' });
 
   const paymentTerms = ["pago", "feito", "já", "ja", "paguei", "pagar", "fiz", "finalizei", "efetivado", "finalizado", "realizei", "efetuado", "realizado", "terminei", "acabei", "concluí", "conclui", "concluido", "concluído"];
   const lowerText = originalText.toLowerCase();
