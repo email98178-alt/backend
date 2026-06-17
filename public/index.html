@@ -1597,13 +1597,10 @@ showDeliverySteps(pixCode);
     
     // 1. Primeiro envia a mensagem
         // Pausa após exibir o código PIX
-    await pause(1200);
+    await pause(800);
     
     // 1. Envia a mensagem PRIMEIRO
     await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
-    
-    // 2. Pausa curta para a mensagem não ser "atropelada"
-    await pause(1200);
     
     // 3. Adiciona o card de status de pagamento DEPOIS da mensagem
     addProfessionalStatusCard();
