@@ -1603,12 +1603,21 @@ await pause(1500);
 // Adiciona o card de status de pagamento (aguardando Pix) imediatamente após o card do Pix
 addProfessionalStatusCard();
 
-window._currentFlowStep = 8; saveChatHistory();
-if (window._currentFlowStep === 8) {
-    window._currentFlowStep = 9;
-    saveChatHistory();
-    await pause(1500);
-    await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+	// Pausa após o card do Pix ser exibido
+	await pause(1500);
+	
+	// Envia a mensagem de acompanhamento ANTES do card de status
+	await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+	
+	// Pequena pausa para o card não "atropelar" a mensagem
+	await pause(1000);
+	
+	// Agora adiciona o card de status de pagamento
+	addProfessionalStatusCard();
+	
+	window._currentFlowStep = 9; 
+	saveChatHistory();
+
     setTimeout(() => {
       if (!window._paymentConfirmed) {
         addProfessionalStatusCard();
