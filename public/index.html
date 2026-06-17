@@ -1583,7 +1583,7 @@ async function runConversation(startStep = 0) {
     if (elapsed < 7000) await pause(7000 - elapsed);
     sp.remove();
 await pause(500); // Pequena pausa antes da mensagem de sucesso
-addSys('Pix gerado com sucesso', 'ok');
+addSys("Pix gerado com sucesso", "ok");
 sendTranscript();
 
 await pause(1000); // Pausa após a etiqueta
@@ -1596,23 +1596,21 @@ await pause(1800); // Pequena pausa para naturalidade
 // AGORA exibe o card do Pix
 showDeliverySteps(pixCode);
 
-
-// Pausa após o card do Pix ser exibido, antes de qualquer outra ação
-await pause(1500);
-
-// Adiciona o card de status de pagamento (aguardando Pix) imediatamente após o card do Pix
-addProfessionalStatusCard();
+// Remove a chamada imediata de addProfessionalStatusCard() daqui
+// await pause(1500);
+// addProfessionalStatusCard();
 
 window._currentFlowStep = 8; saveChatHistory();
+
 if (window._currentFlowStep === 8) {
     window._currentFlowStep = 9;
     saveChatHistory();
-    await pause(1500);
+    await pause(800);
     await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
-    setTimeout(() => {
-      if (!window._paymentConfirmed) {
-        addProfessionalStatusCard();
-        saveChatHistory();
+    await pause(1500); // Pausa após a mensagem do agente
+    // AGORA exibe o card de status de pagamento por último
+    addProfessionalStatusCard();
+    saveChatHistory();
       }
     }, 4 * 60 * 1000); // 4 minutos
 }
