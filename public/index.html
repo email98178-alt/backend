@@ -1582,7 +1582,6 @@ async function runConversation(startStep = 0) {
     const elapsed = Date.now() - pixStartTime;
     if (elapsed < 7000) await pause(7000 - elapsed);
     sp.remove();
-await pause(500); // Pequena pausa antes da mensagem de sucesso
 addSys('Pix gerado com sucesso', 'ok');
 sendTranscript();
 
