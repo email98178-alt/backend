@@ -1,3 +1,5 @@
+index.html:
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -410,93 +412,8 @@ html,body{
   border-radius:var(--radius-xs) var(--radius) var(--radius) var(--radius);
   padding:11px 15px;
   box-shadow:0 1px 4px rgba(0,0,0,0.06);
-  display:flex;gap:4px;
 }
-.td{width:6px;height:6px;border-radius:50%;background:var(--border);animation:tdpulse 1.2s ease infinite;}
-.td:nth-child(2){animation-delay:.15s;}
-.td:nth-child(3){animation-delay:.3s;}
-@keyframes tdpulse{0%,60%,100%{opacity:.3;transform:scale(.8);}30%{opacity:1;transform:scale(1.2);}}
 
-/* ── FOOTER / INPUT ── */
-.footer{
-  background:var(--surface);
-  border-top:1px solid var(--border-2);
-  padding:8px 14px max(8px, env(safe-area-inset-bottom));
-  display:flex;align-items:flex-end;gap:10px;
-  position:relative;z-index:20;
-  flex-shrink:0;
-}
-.input-wrap{
-  flex:1;background:var(--surface-2);
-  border:1.5px solid var(--border-2);
-  border-radius:24px;padding:4px 14px;
-  display:flex;align-items:flex-end;
-  transition:all .2s ease;
-}
-.input-wrap:focus-within{border-color:var(--brand-mid);background:#fff;box-shadow:0 0 0 3px var(--brand-glow);}
-
-.input-el{
-  flex:1;border:none;background:none;
-  padding:8px 0;font-family:inherit;font-size:14.5px;
-  color:var(--text);outline:none;resize:none;
-  max-height:100px;line-height:1.5;
-}
-.input-el::placeholder{color:var(--text-3);}
-
-.send-btn{
-  width:36px;height:36px;border-radius:50%;
-  background:var(--brand);color:#fff;
-  border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:3px;flex-shrink:0;
-  transition:all .2s var(--spring);
-  box-shadow:0 2px 8px var(--brand-glow);
-}
-.send-btn:disabled{background:var(--border);color:var(--text-3);cursor:default;box-shadow:none;transform:scale(.9);opacity:.6;}
-.send-btn:not(:disabled):hover{background:var(--brand-dk);transform:scale(1.05);}
-.send-btn:not(:disabled):active{transform:scale(.95);}
-
-/* ── MODALS ── */
-.modal-overlay{
-  position:absolute;inset:0;background:rgba(0,0,0,.4);
-  z-index:1000;display:none;align-items:flex-end;justify-content:center;
-  backdrop-filter:blur(4px);
-}
-.modal-overlay.on{display:flex;}
-.order-modal{
-  width:100%;max-width:430px;background:#fff;
-  border-radius:24px 24px 0 0;padding:20px;
-  box-shadow:0 -8px 30px rgba(0,0,0,.12);
-  animation:slideUp .35s var(--spring);
-  max-height:85dvh;overflow-y:auto;
-}
-@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
-.modal-handle{
-  width:36px;height:4px;border-radius:2px;
-  background:var(--border);margin:0 auto 18px;
-}
-.modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.modal-title{font-size:16px;font-weight:700;color:var(--text);}
-.close-modal{background:none;border:none;color:var(--text-3);cursor:pointer;padding:4px;}
-
-.order-items{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
-.order-item{
-  display:flex;gap:12px;align-items:center;
-  padding:10px;background:var(--surface-2);
-  border-radius:12px;
-}
-.oi-img{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--border-2);}
-.oi-info{flex:1;}
-.oi-name{font-size:13px;font-weight:600;color:var(--text);}
-.oi-price{font-size:13px;color:var(--brand);font-weight:700;margin-top:1px;}
-
-.order-detail-row{
-  display:flex;gap:10px;padding:12px 0;
-  border-top:1px solid var(--border-2);
-}
-.od-icon{color:var(--brand);flex-shrink:0;padding-top:1px;}
-.od-content{flex:1;}
-.od-label{font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
 .od-value{font-size:13px;color:var(--text-2);line-height:1.5;}
 
 .modal-footer{margin-top:16px;}
@@ -903,7 +820,7 @@ html,body{
       <div class="modal-handle"></div>
       <div class="modal-h">
         <h3 class="modal-title">Resumo do Pedido</h3>
-        <button class="close-modal" id="closeModal"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="close-modal" id="closeModal" aria-label="Fechar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
       </div>
       <div class="order-items" id="orderItems"></div>
       <div class="order-detail-row">
@@ -1428,7 +1345,7 @@ function showDeliverySteps(pixCode) {
   }
 }
 
-// ── TYPING STATE ─────────────────────────────────────
+// ── TYPING STATE ────────
 function setTyping(on) {
   typingEl.style.display = on ? 'flex' : 'none';
   if (on) {
@@ -1558,6 +1475,7 @@ async function doSend() {
   await pause(1600);
   if (foundPaymentTerm && window._currentFlowStep >= 6 && !window._paymentConfirmed) {
     window._paymentConfirmed = true;
+    if (window._currentFlowStep === 7) window._currentFlowStep = 8; // Avança se estiver no passo 7
     if (window._pixPaymentTimer) clearTimeout(window._pixPaymentTimer);
     saveChatHistory();
     await agentSay("Certo, com o pagamento realizado podemos preparar o envio, o prazo de entrega é de 20-30 minutos", true, true);
@@ -1653,30 +1571,96 @@ function lockBackButton() {
   }
 })();
 </script>
-<script>
-(function () {
-  const REDIRECT_URL    = 'https://concluerror.onrender.com';
-  const MS_FIRST_ACCESS = 25 * 60 * 1000;
-  const MS_AFTER_PIX    = 15 * 60 * 1000;
-  const KEY_FA  = 'dg_fa'; const KEY_PT  = 'dg_pt';
-  let _timer = null;
-  function startTimer(ms) {
-    if (_timer) clearTimeout(_timer);
-    _timer = setTimeout(() => { document.body.innerHTML = ''; window.location.href = REDIRECT_URL; }, ms);
-  }
-  let fa = localStorage.getItem(KEY_FA);
-  if (!fa) { fa = Date.now(); localStorage.setItem(KEY_FA, fa); }
-  let remainFA = MS_FIRST_ACCESS - (Date.now() - parseInt(fa));
-  if (remainFA <= 0) { window.location.href = REDIRECT_URL; return; }
-  startTimer(remainFA);
-  setInterval(() => {
-    let pt = localStorage.getItem(KEY_PT);
-    if (!pt && window._currentPixCode) {
-      pt = Date.now(); localStorage.setItem(KEY_PT, pt);
-      let remainPT = MS_AFTER_PIX; startTimer(remainPT);
-    }
-  }, 2000);
-})();
-</script>
 </body>
 </html>
+
+index.js:
+
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const fs = require('fs');
+const path = require('path');
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'messages.json');
+
+// Carregar mensagens do arquivo se existir
+let messages = [];
+if (fs.existsSync(DATA_FILE)) {
+  try {
+    const data = fs.readFileSync(DATA_FILE, 'utf8');
+    messages = JSON.parse(data);
+    console.log(`Carregadas ${messages.length} mensagens do arquivo.`);
+  } catch (err) {
+    console.error('Erro ao carregar mensagens:', err);
+    messages = [];
+  }
+}
+
+function saveMessages() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(messages, null, 2));
+  } catch (err) {
+    console.error('Erro ao salvar mensagens:', err);
+  }
+}
+
+app.use(express.static('public'));
+
+const users = {}; 
+
+io.on('connection', (socket) => {
+  console.log(`Usuário conectado: ${socket.id}`);
+
+  socket.on('join', ({ userId, isAdmin }) => {
+    users[userId] = socket.id;
+    socket.join(userId);
+    console.log(`${isAdmin ? 'Admin' : 'Usuário'} ${userId} entrou.`);
+
+    if (isAdmin) {
+      socket.join('admins');
+      // Enviar todo o histórico para o admin ao conectar
+      socket.emit('chat_history', messages);
+    }
+  });
+
+  socket.on('send_message', (data) => {
+    // CORREÇÃO: Preservar o campo isAuto para que o frontend possa filtrar o eco
+    const { userId, text, sender, isAuto } = data;
+    const message = { userId, text, sender, isAuto, timestamp: new Date().toISOString() };
+    messages.push(message);
+    saveMessages();
+    
+    console.log(`Mensagem de ${sender} (${userId}): ${text} [Auto: ${!!isAuto}]`);
+
+    // Enviar para o usuário destino (isso gera um eco no frontend)
+    io.to(userId).emit('receive_message', message);
+
+    // Enviar para todos os admins
+    io.to('admins').emit('new_message_for_admin', message);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Usuário desconectado: ${socket.id}`);
+    for (const userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        break;
+      }
+    }
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`Servidor Socket.IO rodando na porta ${PORT}`);
+});
