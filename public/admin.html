@@ -3,301 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Monitoramento Diskgas</title>
+    <title>Admin - Monitoramento de Chats</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --brand: #0F5BA8;
-            --bg: #f0f2f5;
-            --surface: #ffffff;
-            --text: #1c1e21;
-            --text-secondary: #65676b;
-            --border: #dddfe2;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'DM Sans', sans-serif; background: var(--bg); height: 100vh; display: flex; }
-
-        /* Sidebar */
-        .sidebar {
-            width: 350px;
-            background: var(--surface);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-            background: var(--brand);
-            color: white;
-        }
-        .user-list {
-            flex: 1;
-            overflow-y: auto;
-        }
-        .user-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .user-item:hover { background: #f5f6f7; }
-        .user-item.active { background: #e7f3ff; border-left: 4px solid var(--brand); }
-        .user-item .user-id { font-weight: 700; font-size: 14px; color: var(--brand); margin-bottom: 4px; display: block; }
-        .user-item .last-msg { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .user-item .time { font-size: 10px; color: #999; float: right; }
-
-        /* Main Chat Area */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #e5ddd5; /* Cor de fundo estilo WhatsApp */
-            position: relative;
-        }
-        .chat-header {
-            padding: 15px 25px;
-            background: #f0f2f5;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        /* Bubbles */
-        .msg {
-            max-width: 70%;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            line-height: 1.4;
-            position: relative;
-            box-shadow: 0 1px 1px rgba(0,0,0,0.1);
-        }
-        .msg.cliente {
-            align-self: flex-start;
-            background: white;
-            border-top-left-radius: 0;
-        }
-        .msg.thiago {
-            align-self: flex-end;
-            background: #dcf8c6;
-            border-top-right-radius: 0;
-        }
-        .msg .sender-name {
-            font-size: 11px;
-            font-weight: 700;
-            margin-bottom: 3px;
-            display: block;
-        }
-        .msg.cliente .sender-name { color: var(--brand); }
-        .msg.thiago .sender-name { color: #059669; }
-        .msg .meta {
-            font-size: 10px;
-            color: #999;
-            margin-top: 4px;
-            text-align: right;
-        }
-        .msg.auto { border: 1px dashed #ccc; opacity: 0.9; }
-
-        /* Input Area */
-        .chat-input-area {
-            padding: 15px 20px;
-            background: #f0f2f5;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .chat-input-area input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 20px;
-            border: 1px solid white;
-            outline: none;
-            font-size: 14px;
-        }
-        .chat-input-area button {
-            background: var(--brand);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 700;
-        }
-        .chat-input-area button:disabled { background: #ccc; }
-
-        .no-chat-selected {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            color: var(--text-secondary);
-        }
+        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 20px; }
+        .chat-list { border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 300px; max-height: 500px; overflow-y: auto; background: #f9f9f9; }
+        .chat-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .chat-item:last-child { border-bottom: none; }
+        .chat-item span { font-weight: bold; color: #0F5BA8; }
+        .chat-item p { margin: 0; font-size: 0.9em; color: #555; }
+        .message-entry { background: #e6f7ff; padding: 5px; border-radius: 3px; margin-top: 5px; }
     </style>
 </head>
 <body>
-
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>Chats Diskgas</h3>
-            <p style="font-size: 12px; opacity: 0.8;">Monitoramento em tempo real</p>
-        </div>
-        <div class="user-list" id="userList">
-            <!-- Lista de usuários carregada via API -->
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div id="chatView" style="display: none; height: 100%; flex-direction: column;">
-            <div class="chat-header">
-                <div>
-                    <strong id="activeUserName">Usuário</strong>
-                    <p id="activeUserStatus" style="font-size: 12px; color: var(--text-secondary);">Histórico completo</p>
-                </div>
-            </div>
-            <div class="chat-messages" id="chatMessages">
-                <!-- Mensagens carregadas aqui -->
-            </div>
-            <div class="chat-input-area">
-                <input type="text" id="adminInput" placeholder="Responder como Thiago...">
-                <button id="sendBtn">Enviar</button>
-            </div>
-        </div>
-
-        <div id="noChatView" class="no-chat-selected">
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px; opacity: 0.2;">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <p>Selecione uma conversa para monitorar ou responder</p>
+    <div class="container">
+        <h1>Monitoramento de Chats em Tempo Real</h1>
+        <div id="admin-chat-list" class="chat-list">
+            <!-- Chats e mensagens aparecerão aqui -->
         </div>
     </div>
 
     <script>
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://backend-mlao.onrender.com';
-        const socket = io(API_URL);
-        let currentUserId = null;
+        const SOCKET_SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://backend-mlao.onrender.com';
+        const socket = io(SOCKET_SERVER_URL);
+        const adminId = 'admin_console'; // ID fixo para o console admin
 
-        // --- SOCKET LOGIC ---
         socket.on('connect', () => {
-            console.log('Admin conectado');
-            socket.emit('join', { userId: 'admin_panel', isAdmin: true });
+            console.log('Admin conectado:', socket.id);
+            socket.emit('join', { userId: adminId, isAdmin: true });
         });
 
-        socket.on('new_message_for_admin', (msg) => {
-            // Se a mensagem for do usuário atual, adiciona na tela
-            if (currentUserId === msg.userId) {
-                renderMessage(msg);
-                scrollToBottom();
+        socket.on('new_message_for_admin', (message) => {
+            console.log('Nova mensagem para admin:', message);
+            addAdminMessage(message);
+        });
+
+        function addAdminMessage(message) {
+            const chatList = document.getElementById('admin-chat-list');
+            let userChatDiv = document.getElementById(`chat-${message.userId}`);
+
+            if (!userChatDiv) {
+                userChatDiv = document.createElement('div');
+                userChatDiv.id = `chat-${message.userId}`;
+                userChatDiv.className = 'chat-item';
+                userChatDiv.innerHTML = `
+                    <div>
+                        <span>Usuário: ${message.userId}</span>
+                        <div class="messages-container"></div>
+                    </div>
+                `;
+                chatList.prepend(userChatDiv); // Adiciona novos chats no topo
             }
-            // Atualiza a lista lateral
-            loadUserList();
-        });
 
-        // --- API CALLS ---
-        async function loadUserList() {
-            try {
-                const res = await fetch(`${API_URL}/api/admin/users`);
-                const users = await res.json();
-                const listEl = document.getElementById('userList');
-                listEl.innerHTML = '';
+            const messagesContainer = userChatDiv.querySelector('.messages-container');
+            const messageEntry = document.createElement('p');
+            messageEntry.className = 'message-entry';
+            messageEntry.textContent = `${message.sender}: ${message.text} (${new Date(message.timestamp).toLocaleTimeString()})`;
+            messagesContainer.appendChild(messageEntry);
 
-                users.forEach(user => {
-                    const item = document.createElement('div');
-                    item.className = `user-item ${currentUserId === user.userId ? 'active' : ''}`;
-                    item.onclick = () => selectUser(user.userId);
-                    
-                    const time = new Date(user.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                    
-                    item.innerHTML = `
-                        <span class="time">${time}</span>
-                        <span class="user-id">${user.userId}</span>
-                        <p class="last-msg">${user.lastMessage}</p>
-                    `;
-                    listEl.appendChild(item);
-                });
-            } catch (err) { console.error('Erro ao carregar lista:', err); }
+            // Scroll para a última mensagem
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
-
-        async function selectUser(userId) {
-            currentUserId = userId;
-            document.getElementById('noChatView').style.display = 'none';
-            document.getElementById('chatView').style.display = 'flex';
-            document.getElementById('activeUserName').textContent = userId;
-            
-            // Atualiza destaque na lista
-            document.querySelectorAll('.user-item').forEach(el => {
-                el.classList.toggle('active', el.querySelector('.user-id').textContent === userId);
-            });
-
-            // Carrega histórico
-            try {
-                const res = await fetch(`${API_URL}/api/admin/history/${userId}`);
-                const history = await res.json();
-                const msgsEl = document.getElementById('chatMessages');
-                msgsEl.innerHTML = '';
-                history.forEach(renderMessage);
-                scrollToBottom();
-            } catch (err) { console.error('Erro ao carregar histórico:', err); }
-        }
-
-        function renderMessage(msg) {
-            const msgsEl = document.getElementById('chatMessages');
-            const div = document.createElement('div');
-            const type = msg.sender.toLowerCase() === 'cliente' ? 'cliente' : 'thiago';
-            div.className = `msg ${type} ${msg.isAuto ? 'auto' : ''}`;
-            
-            const time = new Date(msg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            
-            div.innerHTML = `
-                <span class="sender-name">${msg.sender}${msg.isAuto ? ' (Auto)' : ''}</span>
-                <div class="text">${msg.text}</div>
-                <div class="meta">${time}</div>
-            `;
-            msgsEl.appendChild(div);
-        }
-
-        function scrollToBottom() {
-            const el = document.getElementById('chatMessages');
-            el.scrollTop = el.scrollHeight;
-        }
-
-        // --- SEND LOGIC ---
-        async function sendMessage() {
-            const input = document.getElementById('adminInput');
-            const text = input.value.trim();
-            if (!text || !currentUserId) return;
-
-            const msgData = {
-                userId: currentUserId,
-                text: text,
-                sender: 'Thiago',
-                isAuto: false // Mensagem manual do admin
-            };
-
-            socket.emit('send_message', msgData);
-            input.value = '';
-            // A mensagem aparecerá via socket (new_message_for_admin)
-        }
-
-        document.getElementById('sendBtn').onclick = sendMessage;
-        document.getElementById('adminInput').onkeydown = (e) => { if(e.key === 'Enter') sendMessage(); };
-
-        // Inicialização
-        loadUserList();
-        setInterval(loadUserList, 30000); // Atualiza lista a cada 30s
     </script>
 </body>
 </html>
