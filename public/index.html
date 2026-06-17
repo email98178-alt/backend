@@ -1591,20 +1591,20 @@ await pause(1000); // Pausa após a etiqueta
 // Mensagem de prazo ANTES do card do Pix, com reforço de urgência e facilidade
 await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true);
 
-await pause(1800); // Pequena pausa para naturalidade
+await pause(1200); // Pequena pausa para naturalidade
 
 // AGORA exibe o card do Pix
 showDeliverySteps(pixCode);
 
 
 // Pausa após o card do Pix ser exibido, antes de qualquer outra ação
-    await pause(1500);
+    await pause(1200);
     
     // 1. Primeiro envia a mensagem
     await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
     
     // 2. Pequena pausa para a mensagem carregar antes do card
-    await pause(1000);
+    await pause(800);
     
     // 3. Agora adiciona o card de status de pagamento
     addProfessionalStatusCard();
