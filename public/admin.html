@@ -3,108 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Monitoramento de Chats</title>
+    <title>Admin Dashboard - Diskgas</title>
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; margin-bottom: 20px; }
-        .chat-list { border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 300px; max-height: 600px; overflow-y: auto; background: #f9f9f9; }
-        .chat-item { padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .chat-item:last-child { border-bottom: none; }
-        .chat-item .user-id { font-weight: bold; color: #0F5BA8; display: block; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
-        .message-entry { background: #e6f7ff; padding: 8px 12px; border-radius: 8px; margin-top: 5px; font-size: 0.9em; line-height: 1.4; }
-        .message-entry.agent { background: #f0f0f0; border-left: 3px solid #0F5BA8; }
-        .message-entry.user { background: #e6f7ff; border-left: 3px solid #1B7FD8; }
-        .timestamp { font-size: 0.8em; color: #888; margin-left: 5px; }
-        .messages-container { display: flex; flex-direction: column; gap: 5px; }
+        :root {
+            --primary: #0F5BA8;
+            --secondary: #1B7FD8;
+            --bg: #f4f7fa;
+            --surface: #ffffff;
+            --text-main: #1a202c;
+            --text-sub: #718096;
+            --border: #e2e8f0;
+            --user-bubble: #e6f7ff;
+            --agent-bubble: #f7fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; overflow: hidden; }
+
+        .layout { display: flex; height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            background: var(--primary);
+            color: white;
+        }
+        .sidebar-header h2 { font-size: 1.2rem; }
+        .sidebar-header p { font-size: 0.8rem; opacity: 0.8; margin-top: 4px; }
+
+        .search-box { padding: 15px; border-bottom: 1px solid var(--border); }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .chat-list { flex: 1; overflow-y: auto; }
+        .chat-list-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .chat-list-item:hover { background: #f8fafc; }
+        .chat-list-item.active { background: #edf2f7; border-left: 4px solid var(--primary); }
+        .chat-list-item .user-id { font-weight: 600; font-size: 0.95rem; display: block; margin-bottom: 4px; color: var(--primary); }
+        .chat-list-item .last-msg { font-size: 0.85rem; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chat-list-item .time { font-size: 0.75rem; color: var(--text-sub); position: absolute; top: 15px; right: 20px; }
+
+        /* Main Content */
+        .main-content { flex: 1; display: flex; flex-direction: column; background: #fff; }
+        
+        .chat-header {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: white;
+            z-index: 10;
+        }
+        .chat-header h3 { font-size: 1.1rem; color: var(--primary); }
+        
+        .messages-area {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 12px; position: relative; font-size: 0.95rem; line-height: 1.5; }
+        .message.user {
+            align-self: flex-start;
+            background: var(--user-bubble);
+            border-bottom-left-radius: 2px;
+            color: #2c5282;
+            border: 1px solid #bee3f8;
+        }
+        .message.agent {
+            align-self: flex-end;
+            background: white;
+            border-bottom-right-radius: 2px;
+            color: #2d3748;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .message .meta { font-size: 0.7rem; margin-top: 6px; display: block; opacity: 0.7; text-align: right; }
+        .message.user .meta { text-align: left; }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+        }
+        .empty-state svg { width: 64px; height: 64px; margin-bottom: 15px; opacity: 0.2; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0aec0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Monitoramento de Chats em Tempo Real</h1>
-        <div id="admin-chat-list" class="chat-list">
-            <p style="text-align: center; color: #888;">Aguardando conexões...</p>
-        </div>
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Diskgas Admin</h2>
+                <p id="connection-status">Conectando ao servidor...</p>
+            </div>
+            <div class="search-box">
+                <input type="text" id="user-search" placeholder="Buscar usuário...">
+            </div>
+            <div class="chat-list" id="chat-list">
+                <!-- Chat items will be injected here -->
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="active-chat-container" style="display: none; flex-direction: column; height: 100%;">
+                <header class="chat-header">
+                    <div>
+                        <h3 id="active-user-id">Usuário: -</h3>
+                        <span id="active-user-status" style="font-size: 0.8rem; color: #48bb78;">● Online</span>
+                    </div>
+                    <button onclick="clearCurrentChat()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #fc8181; color: #e53e3e; background: none; cursor: pointer; font-size: 0.8rem;">Fechar Chat</button>
+                </header>
+                <div class="messages-area" id="messages-area">
+                    <!-- Messages will be injected here -->
+                </div>
+            </div>
+
+            <div id="empty-state" class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <p>Selecione um chat para visualizar a conversa</p>
+            </div>
+        </main>
     </div>
 
     <script>
         const SOCKET_SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://backend-mlao.onrender.com';
         const socket = io(SOCKET_SERVER_URL);
-        const adminId = 'admin_console';
+        const adminId = 'admin_enhanced_' + Math.random().toString(36).substr(2, 9);
+        
+        let allChats = {}; // Store all messages grouped by userId
+        let activeUserId = null;
 
         socket.on('connect', () => {
-            console.log('Admin conectado:', socket.id);
+            document.getElementById('connection-status').textContent = 'Conectado em tempo real';
+            document.getElementById('connection-status').style.color = '#c6f6d5';
             socket.emit('join', { userId: adminId, isAdmin: true });
         });
 
-        // Receber histórico completo ao conectar
+        socket.on('disconnect', () => {
+            document.getElementById('connection-status').textContent = 'Desconectado - Tentando reconectar...';
+            document.getElementById('connection-status').style.color = '#fed7d7';
+        });
+
+        // Load full history
         socket.on('chat_history', (history) => {
-            console.log('Histórico recebido:', history.length, 'mensagens');
-            document.getElementById('admin-chat-list').innerHTML = '';
-            if (history.length === 0) {
-                document.getElementById('admin-chat-list').innerHTML = '<p style="text-align: center; color: #888;">Nenhuma mensagem gravada ainda.</p>';
-                return;
-            }
-            // Agrupar mensagens por usuário e renderizar
-            history.forEach(msg => addAdminMessage(msg));
+            console.log('Histórico recebido:', history.length);
+            allChats = {};
+            history.forEach(msg => {
+                if (!allChats[msg.userId]) allChats[msg.userId] = [];
+                allChats[msg.userId].push(msg);
+            });
+            renderChatList();
         });
 
+        // Handle new messages
         socket.on('new_message_for_admin', (message) => {
-            console.log('Nova mensagem para admin:', message);
-            addAdminMessage(message);
+            if (!allChats[message.userId]) allChats[message.userId] = [];
+            
+            // Avoid duplicates
+            const isDuplicate = allChats[message.userId].some(m => m.timestamp === message.timestamp && m.text === message.text);
+            if (!isDuplicate) {
+                allChats[message.userId].push(message);
+                
+                // Update active chat if it's the one being viewed
+                if (activeUserId === message.userId) {
+                    addMessageToUI(message);
+                }
+                
+                renderChatList();
+            }
         });
 
-        function addAdminMessage(message) {
-            const chatList = document.getElementById('admin-chat-list');
-            
-            // Remover mensagem de "Aguardando" ou "Nenhuma mensagem" se existir
-            if (chatList.querySelector('p')) {
-                const p = chatList.querySelector('p');
-                if (p.textContent.includes('Aguardando') || p.textContent.includes('Nenhuma')) {
-                    chatList.removeChild(p);
-                }
-            }
+        function renderChatList() {
+            const listEl = document.getElementById('chat-list');
+            const searchTerm = document.getElementById('user-search').value.toLowerCase();
+            listEl.innerHTML = '';
 
-            let userChatDiv = document.getElementById(`chat-${message.userId}`);
-
-            if (!userChatDiv) {
-                userChatDiv = document.createElement('div');
-                userChatDiv.id = `chat-${message.userId}`;
-                userChatDiv.className = 'chat-item';
-                userChatDiv.innerHTML = `
-                    <span class="user-id">Usuário: ${message.userId}</span>
-                    <div class="messages-container"></div>
-                `;
-                chatList.prepend(userChatDiv);
-            }
-
-            const messagesContainer = userChatDiv.querySelector('.messages-container');
-            
-            // Verificar se a mensagem já existe (evitar duplicatas no histórico)
-            const msgId = `msg-${message.timestamp}-${message.text.substring(0,10)}`;
-            if (document.getElementById(msgId)) return;
-
-            const messageEntry = document.createElement('div');
-            messageEntry.id = msgId;
-            messageEntry.className = `message-entry ${message.sender === 'Thiago' ? 'agent' : 'user'}`;
-            
-            const timeStr = new Date(message.timestamp).toLocaleString('pt-BR', {
-                hour: '2-digit', 
-                minute: '2-digit',
-                day: '2-digit',
-                month: '2-digit'
+            // Sort users by their last message timestamp
+            const sortedUsers = Object.keys(allChats).sort((a, b) => {
+                const lastA = allChats[a][allChats[a].length - 1].timestamp;
+                const lastB = allChats[b][allChats[b].length - 1].timestamp;
+                return new Date(lastB) - new Date(lastA);
             });
 
-            messageEntry.innerHTML = `
-                <strong>${message.sender}:</strong> ${message.text}
-                <span class="timestamp">(${timeStr})</span>
-            `;
-            messagesContainer.appendChild(messageEntry);
+            sortedUsers.forEach(userId => {
+                if (userId.toLowerCase().includes(searchTerm)) {
+                    const messages = allChats[userId];
+                    const lastMsg = messages[messages.length - 1];
+                    const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    
+                    const item = document.createElement('div');
+                    item.className = `chat-list-item ${activeUserId === userId ? 'active' : ''}`;
+                    item.onclick = () => selectChat(userId);
+                    item.innerHTML = `
+                        <span class="user-id">${userId}</span>
+                        <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
+                        <span class="time">${time}</span>
+                    `;
+                    listEl.appendChild(item);
+                }
+            });
 
-            // Scroll para a última mensagem do container do usuário
-            userChatDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            if (sortedUsers.length === 0) {
+                listEl.innerHTML = '<p style="padding: 20px; text-align: center; color: #a0aec0; font-size: 0.9rem;">Nenhum chat encontrado.</p>';
+            }
         }
+
+        function selectChat(userId) {
+            activeUserId = userId;
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('active-chat-container').style.display = 'flex';
+            document.getElementById('active-user-id').textContent = `Usuário: ${userId}`;
+            
+            const messagesArea = document.getElementById('messages-area');
+            messagesArea.innerHTML = '';
+            
+            allChats[userId].forEach(msg => addMessageToUI(msg));
+            
+            // Refresh list to show active state
+            renderChatList();
+            
+            // Scroll to bottom
+            setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
+        }
+
+        function addMessageToUI(message) {
+            const messagesArea = document.getElementById('messages-area');
+            const msgEl = document.createElement('div');
+            msgEl.className = `message ${message.sender === 'Thiago' ? 'agent' : 'user'}`;
+            
+            const timeStr = new Date(message.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            msgEl.innerHTML = `
+                <div class="content"><strong>${message.sender}:</strong> ${message.text}</div>
+                <span class="meta">${timeStr}</span>
+            `;
+            
+            messagesArea.appendChild(msgEl);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        function clearCurrentChat() {
+            activeUserId = null;
+            document.getElementById('active-chat-container').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'flex';
+            renderChatList();
+        }
+
+        document.getElementById('user-search').oninput = renderChatList;
     </script>
 </body>
 </html>
