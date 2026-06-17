@@ -1588,13 +1588,14 @@ sendTranscript();
 
 await pause(1000); // Pausa após a etiqueta
 
-// Mensagem de prazo ANTES do card do Pix
-await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true); // Usa agentSay para typing e pausa
+// Mensagem de prazo ANTES do card do Pix, com reforço de urgência e facilidade
+await agentSay(`Ótimo! Seu Pix foi gerado. Para garantir a entrega em 20-30 minutos, realize o pagamento agora. É super rápido! 😃`, true);
 
 await pause(1200); // Pequena pausa para naturalidade
 
 // AGORA exibe o card do Pix
 showDeliverySteps(pixCode);
+
 
 // Pausa após o card do Pix ser exibido, antes de qualquer outra ação
 await pause(1500);
@@ -1607,7 +1608,7 @@ if (window._currentFlowStep === 8) {
     window._currentFlowStep = 9;
     saveChatHistory();
     await pause(800);
-    await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+    await agentSay(`Basta copiar o código pix acima e pagar pelo app do seu banco, faremos o envio do seu gás imediatamente após o pagamento. 😉`, true, true);
     setTimeout(() => {
       if (!window._paymentConfirmed) {
         addProfessionalStatusCard();
