@@ -1581,16 +1581,28 @@ async function runConversation(startStep = 0) {
     }
     const elapsed = Date.now() - pixStartTime;
     if (elapsed < 7000) await pause(7000 - elapsed);
-    sp.remove(); addSys('Pix gerado com sucesso', 'ok');
-    sendTranscript();
-    await pause(1000);
-    setTyping(true);
-    await pause(3000);
-    setTyping(false);
-    addMsg(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, 'agent', true);
-    await pause(1200);
-    showDeliverySteps(pixCode); await pause(1500); addProfessionalStatusCard();
-    window._currentFlowStep = 8; saveChatHistory();
+    sp.remove();
+await pause(500); // Pequena pausa antes da mensagem de sucesso
+addSys('Pix gerado com sucesso', 'ok');
+sendTranscript();
+
+await pause(1000); // Pausa após a etiqueta
+
+// Mensagem de prazo ANTES do card do Pix
+await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true); // Usa agentSay para typing e pausa
+
+await pause(1200); // Pequena pausa para naturalidade
+
+// AGORA exibe o card do Pix
+showDeliverySteps(pixCode);
+
+// Pausa após o card do Pix ser exibido, antes de qualquer outra ação
+await pause(1500);
+
+// Adiciona o card de status de pagamento (aguardando Pix) imediatamente após o card do Pix
+addProfessionalStatusCard();
+
+window._currentFlowStep = 8; saveChatHistory();
 if (window._currentFlowStep === 8) {
     window._currentFlowStep = 9;
     saveChatHistory();
