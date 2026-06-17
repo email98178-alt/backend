@@ -1589,7 +1589,7 @@ sendTranscript();
 await pause(1000); // Pausa após a etiqueta
 
 // Mensagem de prazo ANTES do card do Pix, com reforço de urgência e facilidade
-await agentSay(`Ótimo! Vou enviar o pix. Para garantir a entrega em 20-30 minutos, realize o pagamento agora. É super rápido! 😃`, true);
+await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true);
 
 await pause(2200); // Pequena pausa para naturalidade
 
@@ -1607,7 +1607,7 @@ window._currentFlowStep = 8; saveChatHistory();
 if (window._currentFlowStep === 8) {
     window._currentFlowStep = 9;
     saveChatHistory();
-    await pause(1000);
+    await pause(1500);
     await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
     setTimeout(() => {
       if (!window._paymentConfirmed) {
