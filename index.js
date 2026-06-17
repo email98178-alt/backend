@@ -57,14 +57,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('send_message', (data) => {
-    const { userId, text, sender } = data;
-    const message = { userId, text, sender, timestamp: new Date().toISOString() };
+    // CORREÇÃO: Preservar o campo isAuto para que o frontend possa filtrar o eco
+    const { userId, text, sender, isAuto } = data;
+    const message = { userId, text, sender, isAuto, timestamp: new Date().toISOString() };
     messages.push(message);
     saveMessages();
     
-    console.log(`Mensagem de ${sender} (${userId}): ${text}`);
+    console.log(`Mensagem de ${sender} (${userId}): ${text} [Auto: ${!!isAuto}]`);
 
-    // Enviar para o usuário destino
+    // Enviar para o usuário destino (isso gera um eco no frontend)
     io.to(userId).emit('receive_message', message);
 
     // Enviar para todos os admins
