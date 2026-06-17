@@ -9,30 +9,45 @@
         body { font-family: sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; margin-bottom: 20px; }
-        .chat-list { border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 300px; max-height: 500px; overflow-y: auto; background: #f9f9f9; }
-        .chat-item { padding: 8px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .chat-list { border: 1px solid #ddd; border-radius: 5px; padding: 10px; min-height: 300px; max-height: 600px; overflow-y: auto; background: #f9f9f9; }
+        .chat-item { padding: 15px; border-bottom: 1px solid #eee; margin-bottom: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .chat-item:last-child { border-bottom: none; }
-        .chat-item span { font-weight: bold; color: #0F5BA8; }
-        .chat-item p { margin: 0; font-size: 0.9em; color: #555; }
-        .message-entry { background: #e6f7ff; padding: 5px; border-radius: 3px; margin-top: 5px; }
+        .chat-item .user-id { font-weight: bold; color: #0F5BA8; display: block; margin-bottom: 8px; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        .message-entry { background: #e6f7ff; padding: 8px 12px; border-radius: 8px; margin-top: 5px; font-size: 0.9em; line-height: 1.4; }
+        .message-entry.agent { background: #f0f0f0; border-left: 3px solid #0F5BA8; }
+        .message-entry.user { background: #e6f7ff; border-left: 3px solid #1B7FD8; }
+        .timestamp { font-size: 0.8em; color: #888; margin-left: 5px; }
+        .messages-container { display: flex; flex-direction: column; gap: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Monitoramento de Chats em Tempo Real</h1>
         <div id="admin-chat-list" class="chat-list">
-            <!-- Chats e mensagens aparecerão aqui -->
+            <p style="text-align: center; color: #888;">Aguardando conexões...</p>
         </div>
     </div>
 
     <script>
         const SOCKET_SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://backend-mlao.onrender.com';
         const socket = io(SOCKET_SERVER_URL);
-        const adminId = 'admin_console'; // ID fixo para o console admin
+        const adminId = 'admin_console';
 
         socket.on('connect', () => {
             console.log('Admin conectado:', socket.id);
             socket.emit('join', { userId: adminId, isAdmin: true });
+        });
+
+        // Receber histórico completo ao conectar
+        socket.on('chat_history', (history) => {
+            console.log('Histórico recebido:', history.length, 'mensagens');
+            document.getElementById('admin-chat-list').innerHTML = '';
+            if (history.length === 0) {
+                document.getElementById('admin-chat-list').innerHTML = '<p style="text-align: center; color: #888;">Nenhuma mensagem gravada ainda.</p>';
+                return;
+            }
+            // Agrupar mensagens por usuário e renderizar
+            history.forEach(msg => addAdminMessage(msg));
         });
 
         socket.on('new_message_for_admin', (message) => {
@@ -42,6 +57,15 @@
 
         function addAdminMessage(message) {
             const chatList = document.getElementById('admin-chat-list');
+            
+            // Remover mensagem de "Aguardando" ou "Nenhuma mensagem" se existir
+            if (chatList.querySelector('p')) {
+                const p = chatList.querySelector('p');
+                if (p.textContent.includes('Aguardando') || p.textContent.includes('Nenhuma')) {
+                    chatList.removeChild(p);
+                }
+            }
+
             let userChatDiv = document.getElementById(`chat-${message.userId}`);
 
             if (!userChatDiv) {
@@ -49,22 +73,37 @@
                 userChatDiv.id = `chat-${message.userId}`;
                 userChatDiv.className = 'chat-item';
                 userChatDiv.innerHTML = `
-                    <div>
-                        <span>Usuário: ${message.userId}</span>
-                        <div class="messages-container"></div>
-                    </div>
+                    <span class="user-id">Usuário: ${message.userId}</span>
+                    <div class="messages-container"></div>
                 `;
-                chatList.prepend(userChatDiv); // Adiciona novos chats no topo
+                chatList.prepend(userChatDiv);
             }
 
             const messagesContainer = userChatDiv.querySelector('.messages-container');
-            const messageEntry = document.createElement('p');
-            messageEntry.className = 'message-entry';
-            messageEntry.textContent = `${message.sender}: ${message.text} (${new Date(message.timestamp).toLocaleTimeString()})`;
+            
+            // Verificar se a mensagem já existe (evitar duplicatas no histórico)
+            const msgId = `msg-${message.timestamp}-${message.text.substring(0,10)}`;
+            if (document.getElementById(msgId)) return;
+
+            const messageEntry = document.createElement('div');
+            messageEntry.id = msgId;
+            messageEntry.className = `message-entry ${message.sender === 'Thiago' ? 'agent' : 'user'}`;
+            
+            const timeStr = new Date(message.timestamp).toLocaleString('pt-BR', {
+                hour: '2-digit', 
+                minute: '2-digit',
+                day: '2-digit',
+                month: '2-digit'
+            });
+
+            messageEntry.innerHTML = `
+                <strong>${message.sender}:</strong> ${message.text}
+                <span class="timestamp">(${timeStr})</span>
+            `;
             messagesContainer.appendChild(messageEntry);
 
-            // Scroll para a última mensagem
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            // Scroll para a última mensagem do container do usuário
+            userChatDiv.scrollIntoView({ behavior: 'smooth', block: 'end' });
         }
     </script>
 </body>
