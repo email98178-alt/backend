@@ -1,28 +1,62 @@
 const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
+const fs = require('fs');
+const path = require('path');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const crypto = require('crypto');
-const path = require('path');
 
+// Carrega as variáveis de ambiente do .env
 dotenv.config();
 
 const app = express();
+
+// --- Middlewares Globais ---
 app.use(express.json());
 app.use(cors());
 
-// Serve arquivos estáticos (HTML, CSS, JS)
+// Serve arquivos estáticos da pasta public e da raiz (ajuste conforme sua estrutura)
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, '.')));
 
-// Rota principal para carregar o seu checkout
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Criação do Servidor HTTP acoplado ao Express
+const server = http.createServer(app);
+
+// Inicialização do Socket.IO ligado ao mesmo servidor HTTP
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
 });
 
-const WOOVI_API_URL = 'https://api.woovi.com/api/v1';
-const WOOVI_APP_ID = process.env.WOOVI_APP_ID;
+const PORT = process.env.PORT || 3000;
+const DATA_FILE = path.join(__dirname, 'messages.json');
 
-// --- Lógica de Rotação de CPFs (Formato Raw) ---
+// --- Lógica de Persistência de Mensagens (Chat) ---
+let messages = [];
+if (fs.existsSync(DATA_FILE)) {
+  try {
+    const data = fs.readFileSync(DATA_FILE, 'utf8');
+    messages = JSON.parse(data);
+    console.log(`Carregadas ${messages.length} mensagens do arquivo.`);
+  } catch (err) {
+    console.error('Erro ao carregar mensagens:', err);
+    messages = [];
+  }
+}
+
+function saveMessages() {
+  try {
+    fs.writeFileSync(DATA_FILE, JSON.stringify(messages, null, 2));
+  } catch (err) {
+    console.error('Erro ao salvar mensagens:', err);
+  }
+}
+
+// --- Lógica de Rotação de CPFs (Checkout Pix) ---
 const RAW_CPFS = `
 44397019819
 39547070800
@@ -288,83 +322,127 @@ const RAW_CPFS = `
 49056155857
 `;
 
-// Converte a string em um array, removendo espaços e linhas vazias
 const LISTA_CPFS = RAW_CPFS.trim().split(/\s+/);
-
-// Índice para controlar qual CPF será o próximo
 let currentCpfIndex = 0;
 
 function getNextCpf() {
-    if (LISTA_CPFS.length === 0 || (LISTA_CPFS.length === 1 && LISTA_CPFS[0] === "")) return null;
-    
-    const cpf = LISTA_CPFS[currentCpfIndex];
-    
-    // Incrementa o índice e volta ao início se chegar no fim da lista
-    currentCpfIndex = (currentCpfIndex + 1) % LISTA_CPFS.length;
-    
-    return cpf;
+  if (LISTA_CPFS.length === 0 || (LISTA_CPFS.length === 1 && LISTA_CPFS[0] === "")) return null;
+  const cpf = LISTA_CPFS[currentCpfIndex];
+  currentCpfIndex = (currentCpfIndex + 1) % LISTA_CPFS.length;
+  return cpf;
 }
-// --------------------------------
 
-// Rota para gerar o Pix (chamada pelo seu index.html )
-app.post('/api/pix', async (req, res) => {
-    try {
-        const { payer_name, payer_cpf, payer_phone, amount } = req.body;
+const WOOVI_API_URL = 'https://api.woovi.com/api/v1';
+const WOOVI_APP_ID = process.env.WOOVI_APP_ID;
 
-        if (!payer_name || !amount) {
-            return res.status(400).json({ success: false, message: 'Campos obrigatórios ausentes.' });
-        }
+// --- Rotas HTTP (Checkout) ---
 
-        const valueInCents = Math.round(parseFloat(amount.replace(',', '.')) * 100);
-        const correlationID = crypto.randomUUID();
-
-        // Obtém o próximo CPF da lista (Round-Robin)
-        const cpfParaUsar = getNextCpf();
-        
-        if (!cpfParaUsar) {
-            throw new Error('Lista de CPFs está vazia.');
-        }
-
-        const payload = {
-            correlationID: correlationID,
-            value: valueInCents,
-            comment: `Pagamento de ${payer_name}`,
-            customer: {
-                name: payer_name,
-                taxID: cpfParaUsar.replace(/\D/g, ''),
-                email: 'cliente@email.com',
-                phone: payer_phone ? payer_phone.replace(/\D/g, '') : ''
-            }
-        };
-
-        const response = await axios.post(`${WOOVI_API_URL}/charge`, payload, {
-            headers: {
-                'Authorization': WOOVI_APP_ID,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (response.data && response.data.charge) {
-            return res.json({
-                success: true,
-                pixCode: response.data.charge.brCode,
-                correlationID: correlationID
-            });
-        } else {
-            throw new Error('Resposta inválida da Woovi');
-        }
-
-    } catch (error) {
-        console.error('Erro ao gerar PIX:', error.response ? error.response.data : error.message);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Erro ao processar o pagamento Pix.',
-            error: error.response ? error.response.data : error.message
-        });
-    }
+// Rota principal para carregar o seu checkout
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+// Rota para gerar o Pix
+app.post('/api/pix', async (req, res) => {
+  try {
+    const { payer_name, payer_cpf, payer_phone, amount } = req.body;
+
+    if (!payer_name || !amount) {
+      return res.status(400).json({ success: false, message: 'Campos obrigatórios ausentes.' });
+    }
+
+    const valueInCents = Math.round(parseFloat(amount.replace(',', '.')) * 100);
+    const correlationID = crypto.randomUUID();
+    const cpfParaUsar = getNextCpf();
+    
+    if (!cpfParaUsar) {
+      throw new Error('Lista de CPFs está vazia.');
+    }
+
+    const payload = {
+      correlationID: correlationID,
+      value: valueInCents,
+      comment: `Pagamento de ${payer_name}`,
+      customer: {
+        name: payer_name,
+        taxID: cpfParaUsar.replace(/\D/g, ''),
+        email: 'cliente@email.com',
+        phone: payer_phone ? payer_phone.replace(/\D/g, '') : ''
+      }
+    };
+
+    const response = await axios.post(`${WOOVI_API_URL}/charge`, payload, {
+      headers: {
+        'Authorization': WOOVI_APP_ID,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (response.data && response.data.charge) {
+      return res.json({
+        success: true,
+        pixCode: response.data.charge.brCode,
+        correlationID: correlationID
+      });
+    } else {
+      throw new Error('Resposta inválida da Woovi');
+    }
+
+  } catch (error) {
+    console.error('Erro ao gerar PIX:', error.response ? error.response.data : error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Erro ao processar o pagamento Pix.',
+      error: error.response ? error.response.data : error.message
+    });
+  }
+});
+
+// --- Eventos do Socket.IO (Chat) ---
+const users = {}; 
+
+io.on('connection', (socket) => {
+  console.log(`Usuário conectado: ${socket.id}`);
+
+  socket.on('join', ({ userId, isAdmin }) => {
+    users[userId] = socket.id;
+    socket.join(userId);
+    console.log(`${isAdmin ? 'Admin' : 'Usuário'} ${userId} entrou.`);
+
+    if (isAdmin) {
+      socket.join('admins');
+      socket.emit('chat_history', messages);
+    }
+  });
+
+  socket.on('send_message', (data) => {
+    const { userId, text, sender } = data;
+    const message = { userId, text, sender, timestamp: new Date().toISOString() };
+    messages.push(message);
+    saveMessages();
+    
+    console.log(`Mensagem de ${sender} (${userId}): ${text}`);
+
+    // Enviar para o usuário destino (ou admin que está na sala do usuário)
+    socket.to(userId).emit('receive_message', message);
+
+    // Enviar para todos os outros admins
+    socket.to('admins').emit('new_message_for_admin', message);
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`Usuário desconectado: ${socket.id}`);
+    for (const userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        break;
+      }
+    }
+  });
+});
+
+// --- Inicialização do Servidor Único ---
+// IMPORTANTE: Usamos 'server.listen' em vez de 'app.listen' para que o Socket.IO funcione corretamente.
+server.listen(PORT, () => {
+  console.log(`Servidor unificado rodando na porta ${PORT}`);
 });
