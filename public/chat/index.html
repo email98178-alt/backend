@@ -547,17 +547,6 @@ html,body{
 .edit-input{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:13px;color:var(--text);outline:none;transition:all .2s;background:var(--surface-2);}
 .edit-input:focus{border-color:var(--brand-mid);background:#fff;box-shadow:0 0 0 3px var(--brand-glow);}
 
-  .name-highlight {
-  background: var(--brand-lt);
-  color: var(--brand-dk);
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 1px solid rgba(15, 91, 168, 0.15);
-  white-space: nowrap;
-}
-
-
 /* ── PIX CARD (new clean design) ── */
 .pix-card {
   background: var(--surface);
@@ -883,6 +872,17 @@ html,body{
   color: var(--text-3);
   margin-top: 2px;
 }
+
+  .name-highlight {
+  background: var(--brand-lt);
+  color: var(--brand-dk);
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(15, 91, 168, 0.15);
+  white-space: nowrap;
+}
+
 
 </style>
 </head>
@@ -1297,10 +1297,7 @@ function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=tru
   const isGrouped = !newGroup && lastSender===type;
   const row = document.createElement('div');
   row.className = `row ${type}${isGrouped?' grouped':''}`;
- let safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'  
-');
-// Aplica o destaque profissional no nome
-safeText = safeText.replace(/Thiago Callegari/g, '<span class="name-highlight">Thiago Callegari</span>');
+  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   const avatarHtml = type==='agent' ? `<img src="${AVATAR}" class="m-avatar${isGrouped?' ghost':''}" alt="Thiago" onclick="openSellerModal()">` : '';
   const readHtml   = type==='user'  ? `<span class="b-read sending">✓</span>` : '';
   row.innerHTML = `${avatarHtml}<div class="bubble ${type==='user'?'u':'a'}">${safeText}<div class="b-meta"><span class="b-time">${ts()}</span>${readHtml}</div></div>`;
