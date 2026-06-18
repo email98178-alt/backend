@@ -1585,10 +1585,10 @@ async function runConversation(startStep = 0) {
 addSys('Pix gerado com sucesso', 'ok');
 sendTranscript();
 
-await pause(1000); // Pausa após a etiqueta
+// Removida a pausa de 1000ms para o efeito de digitação começar imediatamente
+// Adicionado o parâmetro 'true' no final para pular o atraso inicial do agentSay
+await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true, true);
 
-// Mensagem de prazo ANTES do card do Pix, com reforço de urgência e facilidade
-await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true);
 
 await pause(1200); // Pequena pausa para naturalidade
 
