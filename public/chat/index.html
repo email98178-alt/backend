@@ -1297,11 +1297,15 @@ function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=tru
   const isGrouped = !newGroup && lastSender===type;
   const row = document.createElement('div');
   row.className = `row ${type}${isGrouped?' grouped':''}`;
- const safeText = text.replace(/\n/g, '  
+ // Localize a função addMsg e deixe este trecho assim:
+const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'  
 ');
-  const avatarHtml = type==='agent' ? `<img src="${AVATAR}" class="m-avatar${isGrouped?' ghost':''}" alt="Thiago" onclick="openSellerModal()">` : '';
-  const readHtml   = type==='user'  ? `<span class="b-read sending">✓</span>` : '';
-  row.innerHTML = `${avatarHtml}<div class="bubble ${type==='user'?'u':'a'}">${safeText}<div class="b-meta"><span class="b-time">${ts()}</span>${readHtml}</div></div>`;
+const finalSafeText = safeText.replace(/Thiago Callegari/gi, '<strong style="color:var(--brand); font-weight:700;">Thiago Callegari</strong>');
+
+const avatarHtml = type==='agent' ? `<img src="${AVATAR}" class="m-avatar${isGrouped?' ghost':''}" alt="Thiago" onclick="openSellerModal()">` : '';
+const readHtml   = type==='user'  ? `<span class="b-read sending">✓</span>` : '';
+
+row.innerHTML = `${avatarHtml}<div class="bubble ${type==='user'?'u':'a'}">${finalSafeText}<div class="b-meta"><span class="b-time">${ts()}</span>${readHtml}</div></div>`;
   msgsEl.appendChild(row);
   lastSender = type;
   let onReadPromise = Promise.resolve();
@@ -1613,7 +1617,7 @@ async function runConversation(startStep = 0) {
     const localFinal = localBase === 'sua região' ? localBase : `${localBase} e região`;
     await agentSay(`Certo, já vou enviar o pix, um segundo...`);
     await pause(900); setTyping(true); await pause(5500); setTyping(false);
-    await addMsg(`Você verá <strong style="color:var(--brand); border-bottom: 1px solid var(--brand-glow);">THIAGO CALLEGARI</strong> no pix, pois sou o vendedor diskgás oficial em ${localFinal}, serei responsável pela entrega 😃`, 'agent', true);
+    await addMsg(`Você verá Thiago Callegari no pix, pois sou o vendedor diskgás oficial em ${localFinal}, serei responsável pela entrega 😃`, 'agent', true);
     await pause(600);
   }
   if (window._currentFlowStep === 6) {
