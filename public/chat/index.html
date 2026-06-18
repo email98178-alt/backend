@@ -1118,18 +1118,42 @@ function parseOrderData() {
     }
 
     let location = 'sua região';
-    if (address) {
+        if (address) {
+      // Divide por vírgula para separar Logradouro, Número/Complemento, Bairro e Cidade/UF
       const parts = address.split(',').map(p => p.trim());
       let city = '', neighborhood = '';
+
+      // 1. Tenta extrair a Cidade da última parte (ex: "Barueri/SP")
       const lastPart = parts[parts.length - 1];
-      if (lastPart.includes('/')) city = lastPart.split('/')[0].trim();
-      for (let part of parts) {
-        if (part.includes(' - ')) { neighborhood = part.split(' - ')[1].trim(); break; }
+      if (lastPart && lastPart.includes('/')) {
+        city = lastPart.split('/')[0].trim();
       }
-      if (!neighborhood && parts.length >= 3) neighborhood = parts[parts.length - 2];
+
+      // 2. Tenta extrair o Bairro
+      // Em endereços do Google/Maps, o bairro costuma ser a penúltima parte antes da cidade
+      if (parts.length >= 3) {
+        // Pega a parte antes da Cidade/UF
+        let potentialNeighborhood = parts[parts.length - 2];
+        
+        // Se essa parte ainda contiver hífens (ex: "12 - teste - Jardim Itaquiti"), 
+        // o bairro real costuma ser a ÚLTIMA sub-parte dessa string
+        if (potentialNeighborhood.includes(' - ')) {
+          const subParts = potentialNeighborhood.split(' - ').map(s => s.trim());
+          neighborhood = subParts[subParts.length - 1];
+        } else {
+          neighborhood = potentialNeighborhood;
+        }
+      }
+
+      // 3. Limpeza final e definição da 'location'
       if (neighborhood) neighborhood = neighborhood.replace(/^\d+\s*-\s*/, '').trim();
-      if (neighborhood && neighborhood.length > 2) location = neighborhood;
-      else if (city && city.length > 2) location = city;
+      
+      // Prioridade: Bairro > Cidade > "sua região"
+      if (neighborhood && neighborhood.length > 2) {
+        location = neighborhood;
+      } else if (city && city.length > 2) {
+        location = city;
+      }
     }
 
     const nome = p.get('nome') || '';
