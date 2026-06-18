@@ -1590,13 +1590,13 @@ sendTranscript();
 await agentSay(`Após o pagamento o prazo de entrega é de 20-30 minutos. 😃`, true, true);
 
 
-await pause(1200); // Pequena pausa para naturalidade
+await pause(1000); // Pequena pausa para naturalidade
 
 // AGORA exibe o card do Pix
 showDeliverySteps(pixCode);
     
         // Pausa após exibir o código PIX
-    await pause(800);
+    await pause(600);
     
     // 1. Envia a mensagem PRIMEIRO
 await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
