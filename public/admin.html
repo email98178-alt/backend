@@ -92,7 +92,7 @@
             flex-direction: column;
         }
 
-        /* ===== SECTION HEADERS ===== */
+        /* ===== SECTION HEADERS (COLLAPSIBLE) ===== */
         .chat-section {
             display: flex;
             flex-direction: column;
@@ -109,7 +109,14 @@
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .chat-section-header:hover {
+            background: #e8ecf1;
         }
 
         .chat-section-header.pix {
@@ -118,16 +125,26 @@
             border-bottom: 2px solid var(--pix-border);
         }
 
+        .chat-section-header.pix:hover {
+            background: #fef9e7;
+        }
+
+        .chat-section-header .header-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
         .chat-section-header .badge {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             background: currentColor;
             color: white;
             border-radius: 50%;
             width: 20px;
             height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             font-size: 0.65rem;
             font-weight: 700;
         }
@@ -137,9 +154,27 @@
             color: #92400e;
         }
 
+        .chat-section-header .toggle-icon {
+            font-size: 1rem;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-section-header.collapsed .toggle-icon {
+            transform: rotate(-90deg);
+        }
+
         .chat-list {
             display: flex;
             flex-direction: column;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .chat-list.hidden {
+            display: none;
         }
 
         .chat-list-item {
@@ -153,11 +188,6 @@
 
         .chat-list-item:hover { 
             background: #f8fafc; 
-        }
-
-        .chat-list-item.active { 
-            background: #edf2f7; 
-            border-left-color: var(--primary);
         }
 
         .chat-list-item .user-id { 
@@ -193,7 +223,7 @@
             font-style: italic;
         }
 
-        /* ===== MAIN CONTENT ===== */
+        /* ===== MAIN CONTENT (EMPTY) ===== */
         .main-content { 
             flex: 1; 
             display: flex; 
@@ -201,51 +231,106 @@
             background: #fff;
             height: 100vh;
             overflow: hidden;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .chat-header {
-            padding: 15px 25px;
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            padding: 20px;
+        }
+
+        .empty-state svg { 
+            width: 64px; 
+            height: 64px; 
+            margin-bottom: 15px; 
+            opacity: 0.2; 
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            height: 80vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 20px 25px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: white;
-            z-index: 10;
             flex-shrink: 0;
         }
 
-        .chat-header h3 { 
+        .modal-header h3 { 
             font-size: 1.1rem; 
             color: var(--primary); 
         }
 
-        .chat-header-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .chat-header-status {
-            font-size: 0.8rem;
-            color: #48bb78;
-        }
-
-        .close-btn {
-            padding: 6px 12px;
+        .modal-close-btn {
+            padding: 8px 16px;
             border-radius: 6px;
             border: 1px solid #fc8181;
             color: #e53e3e;
             background: none;
             cursor: pointer;
-            font-size: 0.8rem;
-            transition: background 0.2s;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
         }
 
-        .close-btn:hover {
+        .modal-close-btn:hover {
             background: #fff5f5;
+            border-color: #e53e3e;
         }
-        
-        .messages-area {
+
+        .modal-messages {
             flex: 1;
             padding: 25px;
             overflow-y: auto;
@@ -339,24 +424,6 @@
             text-align: left;
         }
 
-        /* ===== EMPTY STATE ===== */
-        .empty-state {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-sub);
-            padding: 20px;
-        }
-
-        .empty-state svg { 
-            width: 64px; 
-            height: 64px; 
-            margin-bottom: 15px; 
-            opacity: 0.2; 
-        }
-
         /* ===== SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -365,10 +432,6 @@
 
         /* ===== RESPONSIVE DESIGN ===== */
         @media (max-width: 768px) {
-            .layout {
-                flex-direction: column;
-            }
-
             .sidebar {
                 width: 100%;
                 height: auto;
@@ -381,22 +444,22 @@
                 height: 60vh;
             }
 
-            .chat-header {
+            .modal-content {
+                width: 95%;
+                height: 85vh;
+            }
+
+            .modal-header {
                 flex-wrap: wrap;
                 gap: 10px;
             }
 
-            .chat-header h3 {
+            .modal-header h3 {
                 flex: 1;
                 min-width: 100%;
             }
 
-            .chat-header-info {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .messages-area {
+            .modal-messages {
                 padding: 15px;
             }
 
@@ -433,15 +496,22 @@
                 height: 65vh;
             }
 
-            .chat-header {
-                padding: 12px 15px;
+            .modal-content {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                max-width: none;
             }
 
-            .chat-header h3 {
+            .modal-header {
+                padding: 15px;
+            }
+
+            .modal-header h3 {
                 font-size: 1rem;
             }
 
-            .messages-area {
+            .modal-messages {
                 padding: 12px;
                 gap: 10px;
             }
@@ -456,9 +526,9 @@
                 max-width: 100%;
             }
 
-            .close-btn {
-                padding: 4px 8px;
-                font-size: 0.7rem;
+            .modal-close-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
             }
 
             .sidebar-header {
@@ -507,24 +577,24 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <div id="active-chat-container" style="display: none; flex-direction: column; height: 100%;">
-                <header class="chat-header">
-                    <h3 id="active-user-id">Usuário: -</h3>
-                    <div class="chat-header-info">
-                        <span id="active-user-status" class="chat-header-status">● Online</span>
-                        <button class="close-btn" onclick="clearCurrentChat()">Fechar Chat</button>
-                    </div>
-                </header>
-                <div class="messages-area" id="messages-area">
-                    <!-- Messages will be injected here -->
-                </div>
-            </div>
-
-            <div id="empty-state" class="empty-state">
+            <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                 <p>Selecione um chat para visualizar a conversa</p>
             </div>
         </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-user-id">Usuário: -</h3>
+                <button class="modal-close-btn" onclick="closeModal()">Fechar</button>
+            </div>
+            <div class="modal-messages" id="modal-messages">
+                <!-- Messages will be injected here -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -533,7 +603,10 @@
         const adminId = 'admin_enhanced_' + Math.random().toString(36).substr(2, 9);
         
         let allChats = {}; // Store all messages grouped by userId
-        let activeUserId = null;
+        let expandedSections = {
+            pix: true,
+            normal: true
+        };
 
         socket.on('connect', () => {
             document.getElementById('connection-status').textContent = 'Conectado em tempo real';
@@ -565,12 +638,6 @@
             const isDuplicate = allChats[message.userId].some(m => m.timestamp === message.timestamp && m.text === message.text);
             if (!isDuplicate) {
                 allChats[message.userId].push(message);
-                
-                // Update active chat if it's the one being viewed
-                if (activeUserId === message.userId) {
-                    addMessageToUI(message);
-                }
-                
                 renderChatList();
             }
         });
@@ -579,6 +646,11 @@
         function hasPixMessage(userId) {
             if (!allChats[userId]) return false;
             return allChats[userId].some(msg => msg.text && msg.text.toLowerCase().includes('verá'));
+        }
+
+        function toggleSection(sectionType) {
+            expandedSections[sectionType] = !expandedSections[sectionType];
+            renderChatList();
         }
 
         function renderChatList() {
@@ -613,15 +685,19 @@
                 pixSection.className = 'chat-section';
 
                 const pixHeader = document.createElement('div');
-                pixHeader.className = 'chat-section-header pix';
+                pixHeader.className = `chat-section-header pix ${!expandedSections.pix ? 'collapsed' : ''}`;
+                pixHeader.onclick = () => toggleSection('pix');
                 pixHeader.innerHTML = `
-                    <span>💳 Pix Gerado</span>
-                    <span class="badge">${pixUsers.length}</span>
+                    <div class="header-content">
+                        <span>💳 Pix Gerado</span>
+                        <span class="badge">${pixUsers.length}</span>
+                    </div>
+                    <span class="toggle-icon">▼</span>
                 `;
                 pixSection.appendChild(pixHeader);
 
                 const pixList = document.createElement('div');
-                pixList.className = 'chat-list';
+                pixList.className = `chat-list ${!expandedSections.pix ? 'hidden' : ''}`;
 
                 if (pixUsers.length > 0) {
                     pixUsers.forEach(userId => {
@@ -630,8 +706,8 @@
                         const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                         
                         const item = document.createElement('div');
-                        item.className = `chat-list-item ${activeUserId === userId ? 'active' : ''}`;
-                        item.onclick = () => selectChat(userId);
+                        item.className = 'chat-list-item';
+                        item.onclick = () => openModal(userId);
                         
                         item.innerHTML = `
                             <span class="user-id">${userId}</span>
@@ -657,15 +733,19 @@
                 normalSection.className = 'chat-section';
 
                 const normalHeader = document.createElement('div');
-                normalHeader.className = 'chat-section-header';
+                normalHeader.className = `chat-section-header ${!expandedSections.normal ? 'collapsed' : ''}`;
+                normalHeader.onclick = () => toggleSection('normal');
                 normalHeader.innerHTML = `
-                    <span>💬 Outras Conversas</span>
-                    <span class="badge">${normalUsers.length}</span>
+                    <div class="header-content">
+                        <span>💬 Outras Conversas</span>
+                        <span class="badge">${normalUsers.length}</span>
+                    </div>
+                    <span class="toggle-icon">▼</span>
                 `;
                 normalSection.appendChild(normalHeader);
 
                 const normalList = document.createElement('div');
-                normalList.className = 'chat-list';
+                normalList.className = `chat-list ${!expandedSections.normal ? 'hidden' : ''}`;
 
                 normalUsers.forEach(userId => {
                     const messages = allChats[userId];
@@ -673,8 +753,8 @@
                     const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
                     
                     const item = document.createElement('div');
-                    item.className = `chat-list-item ${activeUserId === userId ? 'active' : ''}`;
-                    item.onclick = () => selectChat(userId);
+                    item.className = 'chat-list-item';
+                    item.onclick = () => openModal(userId);
                     
                     item.innerHTML = `
                         <span class="user-id">${userId}</span>
@@ -694,26 +774,27 @@
             }
         }
 
-        function selectChat(userId) {
-            activeUserId = userId;
-            document.getElementById('empty-state').style.display = 'none';
-            document.getElementById('active-chat-container').style.display = 'flex';
-            document.getElementById('active-user-id').textContent = `Usuário: ${userId}`;
+        function openModal(userId) {
+            const modal = document.getElementById('modal-overlay');
+            const messagesArea = document.getElementById('modal-messages');
             
-            const messagesArea = document.getElementById('messages-area');
+            document.getElementById('modal-user-id').textContent = `Usuário: ${userId}`;
             messagesArea.innerHTML = '';
             
-            allChats[userId].forEach(msg => addMessageToUI(msg));
+            if (allChats[userId]) {
+                allChats[userId].forEach(msg => addMessageToUI(msg, messagesArea));
+            }
             
-            // Refresh list to show active state
-            renderChatList();
-            
-            // Scroll to bottom
+            modal.classList.add('active');
             setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
         }
 
-        function addMessageToUI(message) {
-            const messagesArea = document.getElementById('messages-area');
+        function closeModal() {
+            const modal = document.getElementById('modal-overlay');
+            modal.classList.remove('active');
+        }
+
+        function addMessageToUI(message, container) {
             const timeStr = new Date(message.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             
             // Check if message contains "verá"
@@ -733,7 +814,7 @@
                 `;
                 
                 pixWrapper.appendChild(pixBlock);
-                messagesArea.appendChild(pixWrapper);
+                container.appendChild(pixWrapper);
             } else {
                 // Create regular message
                 const msgEl = document.createElement('div');
@@ -744,18 +825,16 @@
                     <span class="meta">${timeStr}</span>
                 `;
                 
-                messagesArea.appendChild(msgEl);
+                container.appendChild(msgEl);
             }
-            
-            messagesArea.scrollTop = messagesArea.scrollHeight;
         }
 
-        function clearCurrentChat() {
-            activeUserId = null;
-            document.getElementById('active-chat-container').style.display = 'none';
-            document.getElementById('empty-state').style.display = 'flex';
-            renderChatList();
-        }
+        // Close modal when clicking outside
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('modal-overlay')) {
+                closeModal();
+            }
+        });
 
         document.getElementById('user-search').oninput = renderChatList;
     </script>
