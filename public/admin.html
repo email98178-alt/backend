@@ -20,6 +20,7 @@
             --pix-highlight: #fef3c7;
             --pix-border: #fbbf24;
             --unread-bg: #fef3c7;
+            --success: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -85,23 +86,67 @@
             border-color: var(--primary);
         }
 
+        /* ===== FILTER TABS ===== */
+        .filter-tabs {
+            display: flex;
+            padding: 10px;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            background: white;
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--text-sub);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .filter-tab:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
         .chat-list-container {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
             display: flex;
             flex-direction: column;
+            padding: 12px;
         }
 
         /* ===== SECTION HEADERS (COLLAPSIBLE) ===== */
         .chat-section {
             display: flex;
             flex-direction: column;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .chat-section-header {
-            padding: 12px 20px;
-            background: #f0f4f8;
+            padding: 14px 16px;
+            background: #f8fafc;
             border-bottom: 1px solid var(--border);
             font-size: 0.75rem;
             font-weight: 700;
@@ -112,18 +157,18 @@
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             user-select: none;
         }
 
         .chat-section-header:hover {
-            background: #e8ecf1;
+            background: #f0f4f8;
         }
 
         .chat-section-header.pix {
             background: #fffbeb;
+            border-bottom-color: var(--pix-border);
             color: #92400e;
-            border-bottom: 2px solid var(--pix-border);
         }
 
         .chat-section-header.pix:hover {
@@ -133,21 +178,29 @@
         .chat-section-header .header-content {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
             flex: 1;
+        }
+
+        .chat-section-header .section-icon {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .chat-section-header .badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: currentColor;
+            background: var(--primary);
             color: white;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             font-size: 0.65rem;
             font-weight: 700;
+            margin-left: auto;
         }
 
         .chat-section-header.pix .badge {
@@ -156,11 +209,12 @@
         }
 
         .chat-section-header .toggle-icon {
-            font-size: 1rem;
+            font-size: 0.9rem;
             transition: transform 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-left: 8px;
         }
 
         .chat-section-header.collapsed .toggle-icon {
@@ -179,23 +233,27 @@
         }
 
         .chat-list-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f4f8;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s;
             position: relative;
-            border-left: 4px solid transparent;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
+            gap: 10px;
+        }
+
+        .chat-list-item:last-child {
+            border-bottom: none;
         }
 
         .chat-list-item:hover { 
-            background: #f8fafc; 
+            background: #f8fafc;
         }
 
         .chat-list-item.unread {
-            background: var(--unread-bg);
+            background: #fffbeb;
         }
 
         .chat-list-item.unread:hover {
@@ -205,43 +263,52 @@
         .chat-list-item-content {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .chat-list-item .user-id { 
             font-weight: 600; 
-            font-size: 0.95rem; 
-            display: block; 
-            margin-bottom: 4px; 
+            font-size: 0.9rem; 
             color: var(--primary); 
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .chat-list-item .last-msg { 
-            font-size: 0.85rem; 
+            font-size: 0.8rem; 
             color: var(--text-sub); 
             white-space: nowrap; 
             overflow: hidden; 
             text-overflow: ellipsis;
-            margin-bottom: 4px;
+        }
+
+        .chat-list-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .chat-list-item .time { 
-            font-size: 0.75rem; 
+            font-size: 0.7rem; 
             color: var(--text-sub); 
-            margin-left: 10px;
             white-space: nowrap;
         }
 
         .unread-indicator {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background: var(--pix-border);
             border-radius: 50%;
-            margin-left: 8px;
             flex-shrink: 0;
+            box-shadow: 0 0 0 2px white;
         }
 
         .empty-section {
-            padding: 15px 20px;
+            padding: 20px 14px;
             text-align: center;
             color: #a0aec0;
             font-size: 0.8rem;
@@ -468,13 +535,27 @@
             .sidebar {
                 width: 100%;
                 height: auto;
-                max-height: 40vh;
+                max-height: 45vh;
                 border-right: none;
                 border-bottom: 1px solid var(--border);
             }
 
             .main-content {
-                height: 60vh;
+                height: 55vh;
+            }
+
+            .chat-list-container {
+                padding: 10px;
+            }
+
+            .filter-tabs {
+                padding: 8px;
+                gap: 6px;
+            }
+
+            .filter-tab {
+                padding: 6px 10px;
+                font-size: 0.75rem;
             }
 
             .modal-content {
@@ -511,26 +592,36 @@
             }
 
             .chat-list-item {
-                padding: 12px 15px;
-            }
-
-            .chat-list-item .time {
-                margin-left: 8px;
+                padding: 10px 12px;
             }
 
             .chat-section-header {
-                padding: 10px 15px;
+                padding: 12px 14px;
                 font-size: 0.7rem;
             }
         }
 
         @media (max-width: 480px) {
             .sidebar {
-                max-height: 35vh;
+                max-height: 40vh;
             }
 
             .main-content {
-                height: 65vh;
+                height: 60vh;
+            }
+
+            .chat-list-container {
+                padding: 8px;
+            }
+
+            .filter-tabs {
+                padding: 6px;
+                gap: 4px;
+            }
+
+            .filter-tab {
+                padding: 6px 8px;
+                font-size: 0.7rem;
             }
 
             .modal-overlay {
@@ -608,21 +699,24 @@
             }
 
             .chat-list-item .user-id {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
 
             .chat-list-item .last-msg {
-                font-size: 0.8rem;
+                font-size: 0.75rem;
             }
 
             .chat-list-item .time {
-                font-size: 0.7rem;
-                margin-left: 6px;
+                font-size: 0.65rem;
             }
 
             .chat-section-header {
-                padding: 8px 12px;
+                padding: 10px 12px;
                 font-size: 0.65rem;
+            }
+
+            .chat-section-header .section-icon {
+                font-size: 1rem;
             }
         }
     </style>
@@ -638,6 +732,14 @@
             <div class="search-box">
                 <input type="text" id="user-search" placeholder="Buscar usuário...">
             </div>
+            
+            <!-- Filter Tabs -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="setActiveFilter('all')">📋 Todas</button>
+                <button class="filter-tab" onclick="setActiveFilter('pix')">💳 Pix</button>
+                <button class="filter-tab" onclick="setActiveFilter('normal')">💬 Outras</button>
+            </div>
+
             <div class="chat-list-container" id="chat-list-container">
                 <!-- Chat sections will be injected here -->
             </div>
@@ -672,10 +774,7 @@
         
         let allChats = {}; // Store all messages grouped by userId
         let chatReadStatus = {}; // Track read status for each chat
-        let expandedSections = {
-            pix: true,
-            normal: true
-        };
+        let activeFilter = 'all'; // 'all', 'pix', 'normal'
 
         socket.on('connect', () => {
             document.getElementById('connection-status').textContent = 'Conectado em tempo real';
@@ -726,8 +825,13 @@
             return allChats[userId].some(msg => msg.text && msg.text.toLowerCase().includes('verá'));
         }
 
-        function toggleSection(sectionType) {
-            expandedSections[sectionType] = !expandedSections[sectionType];
+        function setActiveFilter(filter) {
+            activeFilter = filter;
+            // Update button styles
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
             renderChatList();
         }
 
@@ -743,95 +847,27 @@
                 return new Date(lastB) - new Date(lastA);
             });
 
-            // Separate users into two groups
-            const pixUsers = [];
-            const normalUsers = [];
+            // Filter users based on active filter
+            let usersToDisplay = [];
 
             sortedUsers.forEach(userId => {
                 if (userId.toLowerCase().includes(searchTerm)) {
-                    if (hasPixMessage(userId)) {
-                        pixUsers.push(userId);
-                    } else {
-                        normalUsers.push(userId);
+                    if (activeFilter === 'all') {
+                        usersToDisplay.push(userId);
+                    } else if (activeFilter === 'pix' && hasPixMessage(userId)) {
+                        usersToDisplay.push(userId);
+                    } else if (activeFilter === 'normal' && !hasPixMessage(userId)) {
+                        usersToDisplay.push(userId);
                     }
                 }
             });
 
-            // Render PIX section
-            if (pixUsers.length > 0 || normalUsers.length === 0) {
-                const pixSection = document.createElement('div');
-                pixSection.className = 'chat-section';
+            // Render single list based on filter
+            if (usersToDisplay.length > 0) {
+                const list = document.createElement('div');
+                list.className = 'chat-list';
 
-                const pixHeader = document.createElement('div');
-                pixHeader.className = `chat-section-header pix ${!expandedSections.pix ? 'collapsed' : ''}`;
-                pixHeader.onclick = () => toggleSection('pix');
-                pixHeader.innerHTML = `
-                    <div class="header-content">
-                        <span>💳 Pix Gerado</span>
-                        <span class="badge">${pixUsers.length}</span>
-                    </div>
-                    <span class="toggle-icon">▼</span>
-                `;
-                pixSection.appendChild(pixHeader);
-
-                const pixList = document.createElement('div');
-                pixList.className = `chat-list ${!expandedSections.pix ? 'hidden' : ''}`;
-
-                if (pixUsers.length > 0) {
-                    pixUsers.forEach(userId => {
-                        const messages = allChats[userId];
-                        const lastMsg = messages[messages.length - 1];
-                        const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                        const isUnread = !chatReadStatus[userId];
-                        
-                        const item = document.createElement('div');
-                        item.className = `chat-list-item ${isUnread ? 'unread' : ''}`;
-                        item.onclick = () => openModal(userId);
-                        
-                        item.innerHTML = `
-                            <div class="chat-list-item-content">
-                                <span class="user-id">${userId}</span>
-                                <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span class="time">${time}</span>
-                                ${isUnread ? '<div class="unread-indicator"></div>' : ''}
-                            </div>
-                        `;
-                        pixList.appendChild(item);
-                    });
-                } else {
-                    const empty = document.createElement('div');
-                    empty.className = 'empty-section';
-                    empty.textContent = 'Nenhuma conversa com Pix gerado';
-                    pixList.appendChild(empty);
-                }
-
-                pixSection.appendChild(pixList);
-                containerEl.appendChild(pixSection);
-            }
-
-            // Render NORMAL section
-            if (normalUsers.length > 0) {
-                const normalSection = document.createElement('div');
-                normalSection.className = 'chat-section';
-
-                const normalHeader = document.createElement('div');
-                normalHeader.className = `chat-section-header ${!expandedSections.normal ? 'collapsed' : ''}`;
-                normalHeader.onclick = () => toggleSection('normal');
-                normalHeader.innerHTML = `
-                    <div class="header-content">
-                        <span>💬 Outras Conversas</span>
-                        <span class="badge">${normalUsers.length}</span>
-                    </div>
-                    <span class="toggle-icon">▼</span>
-                `;
-                normalSection.appendChild(normalHeader);
-
-                const normalList = document.createElement('div');
-                normalList.className = `chat-list ${!expandedSections.normal ? 'hidden' : ''}`;
-
-                normalUsers.forEach(userId => {
+                usersToDisplay.forEach(userId => {
                     const messages = allChats[userId];
                     const lastMsg = messages[messages.length - 1];
                     const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -846,21 +882,20 @@
                             <span class="user-id">${userId}</span>
                             <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
+                        <div class="chat-list-item-meta">
                             <span class="time">${time}</span>
                             ${isUnread ? '<div class="unread-indicator"></div>' : ''}
                         </div>
                     `;
-                    normalList.appendChild(item);
+                    list.appendChild(item);
                 });
 
-                normalSection.appendChild(normalList);
-                containerEl.appendChild(normalSection);
-            }
-
-            // If no chats at all
-            if (sortedUsers.length === 0) {
-                containerEl.innerHTML = '<p style="padding: 20px; text-align: center; color: #a0aec0; font-size: 0.9rem;">Nenhum chat encontrado.</p>';
+                containerEl.appendChild(list);
+            } else {
+                const empty = document.createElement('div');
+                empty.className = 'empty-section';
+                empty.textContent = 'Nenhuma conversa encontrada';
+                containerEl.appendChild(empty);
             }
         }
 
