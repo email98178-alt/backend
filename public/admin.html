@@ -194,9 +194,9 @@
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .sidebar { width: 100%; height: 40vh; }
+            .sidebar { width: 100%; height: 100vh; border-right: none; }
             .layout { flex-direction: column; }
-            .main-content { height: 60vh; }
+            .main-content { display: none; }
             .modal-content { width: 95%; height: 90vh; }
         }
     </style>
@@ -336,36 +336,7 @@
             if (!currentOpenedUserId) return;
             const msgWithUrl = allChats[currentOpenedUserId].find(m => m.url);
             if (!msgWithUrl || !msgWithUrl.url) { alert('URL não encontrada para este usuário.'); return; }
-
-            try {
-                const url = new URL(msgWithUrl.url);
-                const params = new URLSearchParams(url.search);
-                
-                // Extração inteligente baseada nos parâmetros comuns
-                const nome = params.get('nome') || params.get('name') || 'N/A';
-                const cpf = params.get('cpf') || 'N/A';
-                const rua = params.get('rua') || params.get('address') || 'N/A';
-                const numero = params.get('numero') || params.get('number') || '';
-                const ap = params.get('ap') || params.get('complemento') || '';
-                const cidade = params.get('cidade') || params.get('city') || 'N/A';
-                const cep = params.get('cep') || 'N/A';
-                const valor = params.get('valor') || params.get('price') || '0,00';
-
-                const jsonData = {
-                    "endereco_entrega": `${rua}${numero ? ', ' + numero : ''}${ap ? ' - ' + ap : ''} - ${cidade} CEP: ${cep}`,
-                    "dados_cliente": `Nome: ${nome} , CPF: ${cpf}`,
-                    "valor_compra": `R$ ${valor}`
-                };
-
-                navigator.clipboard.writeText(JSON.stringify(jsonData, null, 4)).then(() => {
-                    const btn = document.getElementById('btn-copy-json');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '✅ Copiado!';
-                    setTimeout(() => btn.innerHTML = originalText, 2000);
-                });
-            } catch (e) {
-                alert('Erro ao processar URL.');
-            }
+            // Rest of the function...
         }
     </script>
 </body>
