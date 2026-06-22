@@ -19,6 +19,7 @@
             --agent-bubble: #f7fafc;
             --pix-highlight: #fef3c7;
             --pix-border: #fbbf24;
+            --unread-bg: #fef3c7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,10 +185,26 @@
             transition: background 0.2s;
             position: relative;
             border-left: 4px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .chat-list-item:hover { 
             background: #f8fafc; 
+        }
+
+        .chat-list-item.unread {
+            background: var(--unread-bg);
+        }
+
+        .chat-list-item.unread:hover {
+            background: #fef9e7;
+        }
+
+        .chat-list-item-content {
+            flex: 1;
+            min-width: 0;
         }
 
         .chat-list-item .user-id { 
@@ -210,9 +227,17 @@
         .chat-list-item .time { 
             font-size: 0.75rem; 
             color: var(--text-sub); 
-            position: absolute; 
-            top: 15px; 
-            right: 20px; 
+            margin-left: 10px;
+            white-space: nowrap;
+        }
+
+        .unread-indicator {
+            width: 8px;
+            height: 8px;
+            background: var(--pix-border);
+            border-radius: 50%;
+            margin-left: 8px;
+            flex-shrink: 0;
         }
 
         .empty-section {
@@ -306,11 +331,17 @@
             justify-content: space-between;
             background: white;
             flex-shrink: 0;
+            border-radius: 12px 12px 0 0;
         }
 
         .modal-header h3 { 
             font-size: 1.1rem; 
             color: var(--primary); 
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .modal-close-btn {
@@ -323,6 +354,8 @@
             font-size: 0.85rem;
             font-weight: 600;
             transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 10px;
         }
 
         .modal-close-btn:hover {
@@ -447,16 +480,21 @@
             .modal-content {
                 width: 95%;
                 height: 85vh;
+                border-radius: 12px;
             }
 
             .modal-header {
-                flex-wrap: wrap;
-                gap: 10px;
+                padding: 15px 20px;
             }
 
             .modal-header h3 {
-                flex: 1;
-                min-width: 100%;
+                font-size: 1rem;
+            }
+
+            .modal-close-btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
+                margin-left: 8px;
             }
 
             .modal-messages {
@@ -465,6 +503,7 @@
 
             .message {
                 max-width: 95%;
+                font-size: 0.9rem;
             }
 
             .pix-highlight-block {
@@ -476,9 +515,7 @@
             }
 
             .chat-list-item .time {
-                position: static;
-                font-size: 0.7rem;
-                margin-top: 4px;
+                margin-left: 8px;
             }
 
             .chat-section-header {
@@ -496,24 +533,42 @@
                 height: 65vh;
             }
 
+            .modal-overlay {
+                padding: 0;
+            }
+
             .modal-content {
                 width: 100%;
                 height: 100vh;
                 border-radius: 0;
-                max-width: none;
+                max-width: 100%;
+                max-height: 100%;
             }
 
             .modal-header {
-                padding: 15px;
+                padding: 12px 15px;
+                border-radius: 0;
+                flex-wrap: wrap;
+                gap: 8px;
             }
 
             .modal-header h3 {
-                font-size: 1rem;
+                font-size: 0.95rem;
+                flex: 1;
+                min-width: 0;
+            }
+
+            .modal-close-btn {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+                margin-left: 0;
+                flex-shrink: 0;
             }
 
             .modal-messages {
                 padding: 12px;
                 gap: 10px;
+                border-radius: 0;
             }
 
             .message {
@@ -524,11 +579,6 @@
 
             .pix-highlight-block {
                 max-width: 100%;
-            }
-
-            .modal-close-btn {
-                padding: 6px 12px;
-                font-size: 0.75rem;
             }
 
             .sidebar-header {
@@ -550,6 +600,24 @@
 
             .chat-list-item {
                 padding: 10px 12px;
+            }
+
+            .chat-list-item-content {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .chat-list-item .user-id {
+                font-size: 0.9rem;
+            }
+
+            .chat-list-item .last-msg {
+                font-size: 0.8rem;
+            }
+
+            .chat-list-item .time {
+                font-size: 0.7rem;
+                margin-left: 6px;
             }
 
             .chat-section-header {
@@ -603,6 +671,7 @@
         const adminId = 'admin_enhanced_' + Math.random().toString(36).substr(2, 9);
         
         let allChats = {}; // Store all messages grouped by userId
+        let chatReadStatus = {}; // Track read status for each chat
         let expandedSections = {
             pix: true,
             normal: true
@@ -623,8 +692,12 @@
         socket.on('chat_history', (history) => {
             console.log('Histórico recebido:', history.length);
             allChats = {};
+            chatReadStatus = {};
             history.forEach(msg => {
-                if (!allChats[msg.userId]) allChats[msg.userId] = [];
+                if (!allChats[msg.userId]) {
+                    allChats[msg.userId] = [];
+                    chatReadStatus[msg.userId] = false; // Mark as unread initially
+                }
                 allChats[msg.userId].push(msg);
             });
             renderChatList();
@@ -632,12 +705,17 @@
 
         // Handle new messages
         socket.on('new_message_for_admin', (message) => {
-            if (!allChats[message.userId]) allChats[message.userId] = [];
+            if (!allChats[message.userId]) {
+                allChats[message.userId] = [];
+                chatReadStatus[message.userId] = false;
+            }
             
             // Avoid duplicates
             const isDuplicate = allChats[message.userId].some(m => m.timestamp === message.timestamp && m.text === message.text);
             if (!isDuplicate) {
                 allChats[message.userId].push(message);
+                // Mark as unread if a new message arrives
+                chatReadStatus[message.userId] = false;
                 renderChatList();
             }
         });
@@ -704,15 +782,21 @@
                         const messages = allChats[userId];
                         const lastMsg = messages[messages.length - 1];
                         const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const isUnread = !chatReadStatus[userId];
                         
                         const item = document.createElement('div');
-                        item.className = 'chat-list-item';
+                        item.className = `chat-list-item ${isUnread ? 'unread' : ''}`;
                         item.onclick = () => openModal(userId);
                         
                         item.innerHTML = `
-                            <span class="user-id">${userId}</span>
-                            <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
-                            <span class="time">${time}</span>
+                            <div class="chat-list-item-content">
+                                <span class="user-id">${userId}</span>
+                                <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="time">${time}</span>
+                                ${isUnread ? '<div class="unread-indicator"></div>' : ''}
+                            </div>
                         `;
                         pixList.appendChild(item);
                     });
@@ -751,15 +835,21 @@
                     const messages = allChats[userId];
                     const lastMsg = messages[messages.length - 1];
                     const time = new Date(lastMsg.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    const isUnread = !chatReadStatus[userId];
                     
                     const item = document.createElement('div');
-                    item.className = 'chat-list-item';
+                    item.className = `chat-list-item ${isUnread ? 'unread' : ''}`;
                     item.onclick = () => openModal(userId);
                     
                     item.innerHTML = `
-                        <span class="user-id">${userId}</span>
-                        <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
-                        <span class="time">${time}</span>
+                        <div class="chat-list-item-content">
+                            <span class="user-id">${userId}</span>
+                            <p class="last-msg">${lastMsg.sender}: ${lastMsg.text}</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="time">${time}</span>
+                            ${isUnread ? '<div class="unread-indicator"></div>' : ''}
+                        </div>
                     `;
                     normalList.appendChild(item);
                 });
@@ -784,6 +874,10 @@
             if (allChats[userId]) {
                 allChats[userId].forEach(msg => addMessageToUI(msg, messagesArea));
             }
+            
+            // Mark as read
+            chatReadStatus[userId] = true;
+            renderChatList();
             
             modal.classList.add('active');
             setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
