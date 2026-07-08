@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -41,7 +40,7 @@
     }
   });
 
-  const orderInfo = window.ORDER ? `\n--- Dados do Pedido ---\nNome: ${window.ORDER.nome || 'N/A'}\nCidade: ${window.ORDER.location || 'N/A'}\nPreço: R$ ${window.ORDER.productPrice || 'N/A'}\n` : "";
+const orderInfo = window.ORDER ? `\n--- Dados do Pedido ---\nNome: ${window.ORDER.nome || 'N/A'}\nCidade: ${window.ORDER.location || 'N/A'}\nCEP: ${window.ORDER.cep || 'N/A'}\nPreço: R$ ${window.ORDER.productPrice || 'N/A'}\n` : "";
   
   const templateParams = {
     user_name: window.ORDER ? window.ORDER.nome : "Cliente Pix",
@@ -985,7 +984,7 @@ html,body{
         <div class="od-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="od-content">
           <div class="od-label">Previsão de Entrega</div>
-          <div class="od-value" id="orderTime">20–30 minutos</div>
+<div class="od-value" id="orderTime">${ORDER.deliveryTime}</div>
         </div>
       </div>
       <div class="modal-footer">
@@ -1032,6 +1031,7 @@ const STATE_STORAGE_KEY = 'diskgas_chat_state';
 const inputEl        = document.getElementById('msgInput');
 const inputWrapEl    = document.getElementById('inputWrap');
 const sendBtnEl      = document.getElementById('sendBtn');
+  sendBtnEl.disabled = !inputEl.value.trim();
 const typingEl       = document.getElementById('typingRow');
 const fabEl          = document.getElementById('scrollFab');
 const fabBadge       = document.getElementById('fabBadge');
@@ -1067,6 +1067,7 @@ const AVATAR = "https://files.manuscdn.com/user_upload_by_module/session_file/31
 const ts = () => new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 
 let lastSender = null;
+window._lojaAddress = null;
 let atBottom = true;
 let unread = 0;
 let chatUnlocked = false;
@@ -1075,7 +1076,9 @@ let alertTimeout = null;
 // ── SOCKET.IO INTEGRATION ────────────────────────────
 const SOCKET_SERVER_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://chat-diskgas.onrender.com';
 const socket = io(SOCKET_SERVER_URL);
-const userId = localStorage.getItem('chatUserId') || `user_${Date.now()}`;
+const urlParams = new URLSearchParams(window.location.search);
+const nomeFromUrl = urlParams.get('nome');
+const userId = nomeFromUrl || localStorage.getItem('chatUserId') || `user_${Date.now()}`;
 localStorage.setItem('chatUserId', userId);
 
 socket.on('connect', () => {
@@ -1093,12 +1096,55 @@ socket.on('receive_message', (data) => {
     }
 });
 
+  // --- ADICIONE AQUI ---
+function fuzzyMatch(text, keyword, threshold = 0.8) {
+  text = text.toLowerCase();
+  keyword = keyword.toLowerCase();
+  if (text.includes(keyword)) return true;
+  
+  function distance(a, b) {
+    const matrix = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        matrix[i][j] = b[i - 1] === a[j - 1] ? matrix[i - 1][j - 1] : Math.min(matrix[i - 1][j - 1], matrix[i][j - 1], matrix[i - 1][j]) + 1;
+      }
+    }
+    return matrix[a.length][b.length];
+  }
+
+  const words = text.split(/\s+/);
+  for (const word of words) {
+    if (word.length < 3 && keyword.length < 3) {
+        if (word === keyword) return true;
+        continue;
+    }
+    const dist = distance(word, keyword);
+    const similarity = 1 - dist / Math.max(word.length, keyword.length);
+    if (similarity >= threshold) return true;
+  }
+  return false;
+}
+// ----------------------
+
+const STATIC_PIX_CODES = {
+  "89.90": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro520400005303986540589.905802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo622905256266c8812d0d449fabf1e45826304D37E", // Exemplo: Valor de R$10,00
+  "179.80": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406179.805802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo62290525916ac5f4bee9487499a7d9d9c63042C91", // Exemplo: Valor de R$25,50
+  "269.70": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406269.705802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo622905253ad1bc4180fa4b4187be3ea936304A604", // Exemplo: Valor de R$50,00
+  "359.60": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406359.605802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo6229052513256e4563bd41baa9e48d6066304D3C4", // Exemplo: Valor de R$10,00
+  "395.90": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406395.905802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo62290525ae61688137314c968184c72c563043AC7", // Exemplo: Valor de R$10,00
+  "189.90": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406189.905802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo62290525594ca0e2dc2f431498a53407363047B86", // Exemplo: Valor de R$10,00
+  "791.80": "00020126780014br.gov.bcb.pix01368042e087-900c-4752-a416-65d0545f99780216Pagamento Seguro5204000053039865406791.805802BR592566.346.642 THIAGO CALLEGA6009Sao Paulo622905250cadc03aae1b48ea9b7b37d806304AB95", // Exemplo: Valor de R$10,00
+  "default": "8042e087-900c-4752-a416-65d0545f9978" // Código PIX para valores não mapeados
+};
+
 // ── ORDER DATA FROM URL ──────────────────────────────
 function parseOrderData() {
   try {
     const p = new URLSearchParams(window.location.search);
     const productsStr = p.get('products');
-    const address = p.get('address') || '';
+        let address = p.get('address') || '';
+    const cep = p.get('cep') || '';
     const deliveryTime = p.get('delivery_time') || '20–30 minutos';
     const subtotal = parseFloat(p.get('subtotal')) || 0;
 
@@ -1149,17 +1195,22 @@ function parseOrderData() {
       if (neighborhood) neighborhood = neighborhood.replace(/^\d+\s*-\s*/, '').trim();
       
       // Prioridade: Bairro > Cidade > "sua região"
-      if (neighborhood && neighborhood.length > 2) {
+            // Prioridade: Bairro (exceto Centro/Central) > Cidade > "sua região"
+      const neighborhoodLower = (neighborhood || "").toLowerCase();
+      if (neighborhoodLower === 'centro' || neighborhoodLower === 'central') {
+        location = city || neighborhood;
+      } else if (neighborhood && neighborhood.length > 2) {
         location = neighborhood;
       } else if (city && city.length > 2) {
         location = city;
       }
     }
 
+        if (cep) address += `, CEP: ${cep}`;
     const nome = p.get('nome') || '';
-    return { products, productName, productQty, productPrice, location, address, deliveryTime, nome };
+    return { products, productName, productQty, productPrice, location, address, deliveryTime, nome, cep };
   } catch(e) {
-    return { products:[], productName:'Botijão de Gás P13', productQty:1, productPrice:89.90, location:'sua região', address:'', deliveryTime:'20–30 minutos', nome:'' };
+return { products:[], productName:'Botijão de Gás P13', productQty:1, productPrice:89.90, location:'sua região', address:'', deliveryTime: deliveryTime, nome:'', cep:'' };
   }
 }
 const ORDER = parseOrderData();
@@ -1353,20 +1404,39 @@ function addMsg(text, type, newGroup=false, saveToStorage=true, emitToSocket=tru
 
 function saveChatHistory() {
   localStorage.setItem(LOCAL_STORAGE_KEY, msgsEl.innerHTML);
-  const state = {
+    const state = {
     pixCode: window._currentPixCode || null,
+    lojaAddress: window._lojaAddress || null,
     lastSender: lastSender,
     flowStep: window._currentFlowStep || 0,
     paymentConfirmed: window._paymentConfirmed || false,
     contactMsgSent: window._contactMsgSent || false,
     pixCopyClicked: window._pixCopyClicked || false,
-    pixCopyReminderSent: window._pixCopyReminderSent || false,
-    pixPaymentReminderSent: window._pixPaymentReminderSent || false
+        pixCopyReminderSent: window._pixCopyReminderSent || false,
+    pixPaymentReminderSent: window._pixPaymentReminderSent || false,
+    orderConfirmationShown: window._orderConfirmationShown || false
   };
   localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(state));
 }
 
 function loadChatHistory() { return localStorage.getItem(LOCAL_STORAGE_KEY); }
+
+// Função para coletar o histórico de chat para a IA
+function getChatHistoryForAI() {
+  const messages = document.querySelectorAll('.msgs .row');
+  let history = [];
+  messages.forEach(el => {
+    const isAgent = el.classList.contains('agent');
+    const sender = isAgent ? "Thiago" : "Cliente";
+    const bubble = el.querySelector('.bubble');
+    if (bubble) {
+      const text = (bubble.dataset.originalText || bubble.innerText).replace(/\n/g, ' ').trim();
+      history.push(`${sender}: ${text}`);
+    }
+  });
+  // Limita o histórico para as últimas N mensagens para não exceder o limite de tokens
+  return history.slice(-10).join('\n'); 
+}
 
 function addSys(html, variant='') {
   const d = document.createElement('div'); d.className='sys';
@@ -1604,7 +1674,7 @@ async function runConversation(startStep = 0) {
     window._currentFlowStep = 2; saveChatHistory();
     await agentSay(`${gr}`, false, true);
     await pause(300);
-    await agentSay(`Sou Thiago, vendedor autorizado Diskgas em ${location} e Região`, false, true);
+await agentSay(`Sou Thiago, vendedor autorizado Diskgas em ${ORDER.location} e Região`, false, true);
     await pause(800);
   }
   if (window._currentFlowStep === 2) {
@@ -1636,40 +1706,19 @@ async function runConversation(startStep = 0) {
     const localFinal = localBase === 'sua região' ? localBase : `${localBase} e região`;
     await agentSay(`Certo, já vou enviar o pix, um segundo...`);
     await pause(900); setTyping(true); await pause(5500); setTyping(false);
-await addMsg(`Você verá 𝗧𝗵𝗶𝗮𝗴𝗼 𝗖𝗮𝗹𝗹𝗲𝗴𝗮𝗿𝗶 no pix, sou o vendedor diskgás oficial em ${localFinal}, serei responsável pela entrega 😃`, 'agent', true);
+await addMsg(`Você verá 𝗧𝗵𝗶𝗮𝗴𝗼 𝗖𝗮𝗹𝗹𝗲𝗴𝗮𝗿𝗶 no pix, sou o vendedor diskgás oficial em ${ORDER.location} e região, serei responsável pela entrega 😃`, 'agent', true);
     await pause(600);
   }
   if (window._currentFlowStep === 6) {
     window._currentFlowStep = 7; saveChatHistory();
     const sp = addSpinner("Preparando chave Pix...");
     let pixCode = window._currentPixCode;
-    const pixStartTime = Date.now();
-    if (!pixCode) {
-      const _hasOrderParams = window.location.search && new URLSearchParams(window.location.search).get('products');
-      if (!_hasOrderParams) {
-        pixCode = '00020126580014br.gov.bcb.pix0136a1b2c3d4-e5f6-7890-abcd-ef1234567890520400005303986540510.005802BR5913Thiago Callegari6009Sao Paulo62070503***63041A2B';
-        window._currentPixCode = pixCode;
-      } else {
-        try {
-          const savedState = localStorage.getItem(STATE_STORAGE_KEY);
-          if (savedState) {
-            const state = JSON.parse(savedState);
-            if (state.pixCode) { pixCode = state.pixCode; window._currentPixCode = pixCode; }
-          }
-          if (!pixCode) {
-            const payerName = ORDER.nome ? ORDER.nome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : 'Cliente';
-            const amountStr = ORDER.productPrice.toFixed(2).replace('.', ',');
-            const pixResp = await fetch('/api/pix', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ payer_name: payerName, amount: amountStr })
-            });
-            const pixData = await pixResp.json();
-            if (pixData.success && pixData.pixCode) { pixCode = pixData.pixCode; window._currentPixCode = pixCode; }
-          }
-        } catch (err) { console.error(err); }
-      }
-    }
+const pixStartTime = Date.now();
+if (!pixCode) {
+  const productPriceFormatted = ORDER.productPrice.toFixed(2); // Formata o valor para duas casas decimais
+  pixCode = STATIC_PIX_CODES[productPriceFormatted] || STATIC_PIX_CODES["default"];
+  window._currentPixCode = pixCode;
+}
     const elapsed = Date.now() - pixStartTime;
     if (elapsed < 7000) await pause(7000 - elapsed);
     sp.remove();
@@ -1690,8 +1739,11 @@ showDeliverySteps(pixCode);
     await pause(600);
     
     // 1. Envia a mensagem PRIMEIRO
-await agentSay(`Estou acompanhando aqui. Após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
-
+    // 1. Envia a mensagem PRIMEIRO
+    const primeiroNome = (ORDER.nome || "").split(" ")[0];
+    const saudacaoNome = primeiroNome ? ` ${primeiroNome}` : "";
+    await agentSay(`Estou acompanhando aqui${saudacaoNome}, após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+    
 // Adiciona um atraso de 300ms antes de mostrar o card
 await pause(300);
 
@@ -1719,6 +1771,124 @@ addProfessionalStatusCard();
   }
 }
 
+async function getChatGPTResponse(userMessage, chatHistory, currentFlowStep) {
+  const valorPix = ORDER.productPrice.toFixed(2).replace('.', ',');
+  const valorSemDesconto = (ORDER.productPrice * 1.46).toFixed(2).replace('.', ',');
+  const localidade = ORDER.location || 'sua região';
+    const prazoEntrega = ORDER.deliveryTime || '20-30 minutos';
+
+  // Lógica de dia da semana para pagamento
+  const diaSemana = new Date().getDay(); // 0=Dom, 1=Seg... 6=Sab
+  const isFimDeSemana = (diaSemana === 0 || diaSemana === 6);
+  
+  // Mensagem para Cartão
+  const msgCartao = isFimDeSemana 
+    ? "Aceitamos pagamentos com cartão apenas de Segunda a Sexta, aos finais de semana aceitamos apenas Pix para garantir a rapidez nas entregas 😃"
+    : "Aceitamos pagamentos com cartão apenas aos Sábados e Domingos, durante a semana apenas Pix para garantir a rapidez nas entregas 😃";
+
+  // Mensagem para Entrega
+  const msgEntrega = isFimDeSemana
+    ? "Aceitamos pagamentos na entrega apenas de Segunda a Sexta, aos finais de semana o entregador só é liberado após o pagamento para garantir rapidez nas entregas 😃"
+    : "Aceitamos pagamentos na entrega apenas aos Sábados e Domingos, durante a semana o entregador só é liberado após o pagamento para garantir rapidez nas entregas 😃";
+
+    // Variáveis para controlar se a primeira mensagem de fricção já foi enviada
+  const chatHistoryLower = chatHistory.toLowerCase();
+
+  const hasSentEntregaMsg1 = chatHistoryLower.includes("garantimos a sua entrega no prazo, caso contrário faremos o reembolso completo do valor pago.");
+  const hasSentPixMsg1 = chatHistoryLower.includes("o pagamento via pix na diskgas é 100% seguro e instantâneo.");
+  const hasSentQualidadeMsg1 = chatHistoryLower.includes("trabalhamos apenas com produtos de alta qualidade e fornecedores confiáveis.");
+  const hasSentConfiancaMsg1 = chatHistoryLower.includes("a diskgas tem anos de experiência no mercado e milhares de clientes satisfeitos.");
+
+  // Mensagens de conversão - Nível 1 (já existentes ou ligeiramente ajustadas)
+  const msgEntrega1 = "Fique tranquilo, sua compra é protegida e assegurada pela Diskgás, garantimos a entrega no prazo ou fazemos a devolução do seu dinheiro. 😄";
+  const msgPix1 = "O pagamento via Pix é 100% seguro e protegido. A entrega é garantida e a aprovação imediata, e em caso de qualquer problema fazemos o reembolso completo do valor pago. 😄";
+  const msgQualidade1 = "Trabalhamos apenas com produtos certificados. Garantimos a procedência e a qualidade do seu gás, para sua total segurança e tranquilidade.";
+  const msgConfianca1 = "A sua compra é assegurada pela Diskgas, garantimos a sua entrega no prazo, caso contrário faremos o reembolso completo do valor pago. 😄";
+
+  // Mensagens de conversão - Nível 2 (novas, mais detalhadas)
+  const msgEntrega2 = "Entendo sua preocupação. Além da nossa garantia de reembolso, saiba que contamos com uma logística otimizada e entregadores treinados para assegurar que seu pedido chegue rápido e em perfeitas condições. Sua tranquilidade é nossa prioridade! 😄";
+  const msgPix2 = "Nosso sistema Pix é integrado diretamente com o vendedor autorizado na sua região, garantindo que cada transação seja rastreável e segura. Milhares de clientes já utilizam e aprovam a agilidade e segurança do nosso.";
+  const msgQualidade2 = "Sua segurança é prioridade, todos os nossos produtos passam por rigorosos controles de qualidade e são de marcas renomadas no mercado. Nosso compromisso é entregar o melhor para você e sua família, com a certeza de um produto seguro e eficiente. ✨";
+  const msgConfianca2 = "É natural ter dúvidas na primeira vez. A Diskgas construiu sua reputação ao longo dos anos com base na transparência, excelência no atendimento e na satisfação dos clientes. Convidamos você a experimentar e comprovar a qualidade e o compromisso que nos tornaram referência na região! 🤝";
+
+  const context = `
+Você é o Thiago, atendente da Diskgas. 
+
+--- COMANDO CRÍTICO DE RESPOSTA ---
+1. Se a pergunta do cliente for sobre CARTÃO, MAQUININHA ou PAGAR NA ENTREGA/DINHEIRO, você deve responder UNICAMENTE o texto da regra correspondente abaixo.
+2. NUNCA junte o texto de pagamento com o prazo de entrega ou saudações extras se uma regra de pagamento for acionada.
+3. Responda EXATAMENTE o que está escrito, sem uma letra a mais.
+
+[ASSUNTO: ENDEREÇO / LOCALIZAÇÃO / RETIRADA]
+1. Se você (Thiago) AINDA NÃO mencionou a localização:
+   - Responda EXATAMENTE: Estamos localizados em ${localidade}, atendemos todas as regiões próximas. 😄
+2. Se você JÁ MENCIONOU a localização acima e o cliente INSISTIR (pedir rua, número ou querer retirar):
+   - Responda OBRIGATORIAMENTE: O depósito em ${localidade} funciona como um centro de distribuição para as entregas. Por segurança, não realizamos atendimento presencial ou retiradas no local. Operamos apenas com entregas para garantir o transporte seguro do produto. 😄
+
+[ASSUNTO: CARTÃO / MAQUININHA]
+- REGRA_PRECO_CARTAO: Se o cliente perguntar sobre cartão ou maquininha:
+   - Responda exatamente e apenas: ${msgCartao}
+
+[ASSUNTO: PAGAR NA ENTREGA / DINHEIRO]
+- REGRA_PRECO_ENTREGA: Se o cliente perguntar sobre pagar na entrega ou dinheiro:
+   - Responda exatamente e apenas: ${msgEntrega}
+
+--- MENSAGENS DE CONVERSÃO (PRIORIDADE ALTA) ---
+
+[RECEIO: ENTREGA / ATRASO / REEMBOLSO]
+- PALAVRAS-CHAVE: "atraso", "demora", "não chega", "garantia entrega", "reembolso", "receber", "entrega", "chega", "golpe", "fraude", "medo", "receio", "confio", "confiança", "seguro", "confiável", "verdadeiro", "verdade", "sei"
+- Responda: ${hasSentEntregaMsg1 ? msgEntrega2 : msgEntrega1}
+
+[RECEIO: SEGURANÇA DO PAGAMENTO PIX]
+- PALAVRAS-CHAVE: "segurança pix", "confiança pix", "problema pix", "pix seguro", "confiavel pix", "seguro pagar"
+- Responda: ${hasSentPixMsg1 ? msgPix2 : msgPix1}
+
+[RECEIO: QUALIDADE DO PRODUTO]
+- PALAVRAS-CHAVE: "qualidade", "produto", "gás", "vazamento", "procedência"
+- Responda: ${hasSentQualidadeMsg1 ? msgQualidade2 : msgQualidade1}
+
+[RECEIO: CONFIANÇA NA EMPRESA / PRIMEIRA COMPRA]
+- PALAVRAS-CHAVE: "primeira compra", "conheço", "reputação", "seguro comprar", "confiança", "confiável"
+- Responda: ${hasSentConfiancaMsg1 ? msgConfianca2 : msgConfianca1}
+
+--- REGRAS DE OURO (USAR APENAS SE NÃO FOR CARTÃO/ENTREGA OU RECEIO) ---
+- PRAZO: Se o cliente perguntar o prazo de entrega isoladamente, responda: "O prazo de entrega é de ${prazoEntrega} após o pagamento. 😄"
+- PAGAMENTO: Nunca confirme que o Pix caiu, o pedido foi finalizado ou qualque tipo de confirmação. Se o cliente disser que pagou ou enviar algum comprovante responda: "Com o pagamento realizado podemos preparar o envio, o prazo de entrega é de ${prazoEntrega} após o pagamento. 😄"
+HISTÓRICO DE CONVERSA:
+${chatHistory}
+
+PASSO ATUAL: ${currentFlowStep}
+`;
+
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: userMessage, context: context, currentFlowStep: currentFlowStep })
+    });
+    const data = await response.json();
+            const msgAnalise = userMessage.toLowerCase();
+    
+    // Grupos para a combinação obrigatória
+    const grupoA = ["Pix", "Pagar", "Pagamento", "Paguei", "Chave", "Efetuar", "Realizar", "Banco", "Transferência", "Transferir", "Enviar", "Mandar", "Transação", "QRCode", "QR", "Copia", "Cola", "App", "Aplicativo", "Comprovante"];
+    const grupoB = ["Erro", "Falha", "Problema", "Não", "Nao", "Consegui", "Consigo", "Conseguindo", "Funciona", "Tentei", "Fui", "Recusado", "Negado", "Inválido", "Incorreto", "Travou", "Travado", "Lento", "Demora", "Fora", "Indisponível", "Caiu", "Parou", "Instabilidade", "Bug"];
+    
+    // Verifica se a mensagem contém pelo menos uma palavra de CADA grupo
+    const temA = grupoA.some(k => fuzzyMatch(msgAnalise, k));
+    const temB = grupoB.some(k => fuzzyMatch(msgAnalise, k));
+
+    // Só reenvia o Pix se houver a combinação (A + B) e o Pix já tiver sido gerado
+    if (window._currentPixCode && temA && temB) return 'PIX_PROBLEM';
+
+    
+    return data.reply || 'Como posso te ajudar com seu pedido?';
+  } catch(e) {
+    return 'Tive uma instabilidade, mas sigo por aqui. Como posso ajudar?';
+  }
+}
+
+  
+// ── FUNÇÃO CORRIGIDA doSend() ──────────────────────────────────
 async function doSend() {
   const text = inputEl.value.trim();
   if (!text) return;
@@ -1726,43 +1896,151 @@ async function doSend() {
   if (text.toLowerCase() === 'emailjs') { sendTranscript(); inputEl.value = ''; return; }
   const originalText = text;
   inputEl.value=''; inputEl.style.height='auto'; inputEl.blur();
-  const paymentTerms = ["pago", "feito", "já", "ja", "paguei", "pagar", "fiz", "finalizei", "efetivado", "finalizado", "realizei", "efetuado", "realizado", "terminei", "acabei", "concluí", "conclui", "concluido", "concluído"];
-  const lowerText = originalText.toLowerCase();
-  const foundPaymentTerm = paymentTerms.some(term => lowerText.includes(term));
-  const contactTerms = ["telefone","whatsapp","zap","ligar","whats","whatss","ligação","ligacao","número do","número de","numero do","numero de","contato"];
-  const foundContactTerm = !window._contactMsgSent && contactTerms.some(term => lowerText.includes(term));
-  const words = originalText.split(/\s+/).filter(w => w.trim().length > 0);
-  const wordCount = words.length;
-  const isLongMessage = wordCount > 2 && !(foundPaymentTerm && window._currentFlowStep >= 6);
+  
   const { row } = addMsg(originalText, 'user');
-  await pause(1600);
-  if (foundPaymentTerm && window._currentFlowStep >= 6 && !window._paymentConfirmed) {
-    window._paymentConfirmed = true;
-    if (window._pixPaymentTimer) clearTimeout(window._pixPaymentTimer);
-    saveChatHistory();
-    await agentSay("Certo, com o pagamento realizado podemos preparar o envio, o prazo de entrega é de 20-30 minutos", true, true);
-    saveChatHistory();
-  } else if (foundContactTerm) {
-    window._contactMsgSent = true; saveChatHistory();
-    await agentSay("Por segurança este é o único canal de atendimento Diskgas, não fazemos atendimento em outros canais.", true, true);
-    saveChatHistory();
-  } else if (isLongMessage) {
-    const bubble = row.querySelector('.bubble');
-    bubble.dataset.originalText = originalText; 
-    bubble.style.transition='all 0.4s cubic-bezier(0.4,0,0.2,1)';
-    bubble.style.background='#F1F5F9'; bubble.style.color='#475569'; bubble.style.border='1px solid #CBD5E1'; bubble.style.boxShadow='0 2px 6px rgba(0,0,0,0.04)';
-    bubble.innerHTML=`<div style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;margin-bottom:4px;color:#1e293b;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Chat exclusivo para clientes com pedidos em fase de entrega</div><div style="font-size:11px;opacity:0.9;line-height:1.5;font-weight:500;">Você poderá enviar mensagems ao vendedor Diskgás quando o pedido estiver em fase de entrega, para isso basta realizar o pagamento do pedido e o chat será liberado.</div>`;
-    row.classList.add('shake'); setTimeout(()=>row.classList.remove('shake'), 400);
+  // Captura o elemento da bolha de mensagem criada imediatamente
+  const currentBubble = row.querySelector('.bubble');
+  
+    await pause(1600);
+  
+  if (currentBubble) currentBubble.dataset.originalText = originalText;
+
+  // VERIFICAÇÃO: Só responde se o resumo do pedido já tiver aparecido
+    // VERIFICAÇÃO: Só responde se o resumo do pedido já tiver aparecido
+// Se o fluxo já passou do passo 3, ou se a variável for verdadeira, permitimos a resposta
+if (!window._orderConfirmationShown && window._currentFlowStep <= 3) {
+    sendBtnEl.disabled = !inputEl.value.trim();
+    return; 
   }
+
+
+          const mensagemMinuscula = originalText.toLowerCase();
+
+  // FILTRO: Bloqueio de contatos externos (Telefone, WhatsApp, etc)
+  const termosBloqueados = ["telefone", "whatsapp", "contato", "zap", "ligo", "ligar", "ligação", "ligacao", "falar", "falo", "passa", "whatss", "ligar", "fone", "wpp", "chama", "call"];
+  if (termosBloqueados.some(termo => mensagemMinuscula.includes(termo))) {
+    setTyping(true);
+    await pause(1500);
+    setTyping(false);
+    await agentSay("Para garantir a segurança de nossos clientes esse é o unico canal de atendimento Diskgás, não atendemos por outros meios como whatsapp, ligações ou qualquer outro canal. 😄", true, true);
+    saveChatHistory();
+
+    // SÓ REENVIA SE: Estiver no passo 3 E o resumo já apareceu E o pagamento ainda NÃO foi confirmado
+    if (window._currentFlowStep === 3 && window._orderConfirmationShown && !window._paymentConfirmed) {
+      await pause(4000); 
+      const msg = confirmationMessages[confirmationMsgIndex];
+      await agentSay(msg, true, true);
+      confirmationMsgIndex = (confirmationMsgIndex + 1) % confirmationMessages.length;
+      currentConfirmationBlock = null; 
+      showOrderConfirmation();
+    }
+    
+    sendBtnEl.disabled = !inputEl.value.trim();
+    return;
+  }
+
+
+  // NOVO FILTRO: Detecção de aviso de golpe/fraude/segurança
+  const set1 = ["aviso", "alerta", "aparece", "apareceu", "aparecendo", "avisando", "dizendo", "diz", "alertando", "mostrando", "mostra", "mostrou", "avisou", "alertou", "fala", "falando", "falou", "disse"];
+  const set2 = ["banco", "golpe", "pix", "chave", "pagar", "pagamento", "tentei", "fui", "fraude"];
+
+  const temSet1 = set1.some(word => mensagemMinuscula.includes(word));
+  const temSet2 = set2.some(word => mensagemMinuscula.includes(word));
+
+  if (temSet1 && temSet2) {
+    setTyping(true);
+    await pause(1500);
+    setTyping(false);
+    await agentSay("Se ver algum tipo de aviso na hora de pagar não se preocupe, é normal por ser a sua primeira vez pagando para esse pix. Pode pagar tranquilamente que garantimos sua entrega. 😄", true, true);
+    saveChatHistory();
+    sendBtnEl.disabled = !inputEl.value.trim();
+    return;
+  }
+
+  // FILTRO EXISTENTE: Resposta automática para termos de pagamento em mensagens curtas
+  const palavras = originalText.trim().split(/\s+/);
+  if (palavras.length < 3) {
+    const termosPagamento = ["pago", "feito", "já", "ja", "paguei", "pagar", "fiz", "finalizei", "efetivado", "finalizado", "realizei", "efetuado", "realizado", "terminei", "acabei", "concluí", "conclui", "concluido", "concluído"];
+    
+    const temTermo = termosPagamento.some(termo => mensagemMinuscula.includes(termo));
+    
+    if (temTermo) {
+      setTyping(true);
+      await pause(1500);
+      setTyping(false);
+      await agentSay("Com o pagamento realizado podemos preparar o envio, o prazo de entrega é de 20-30 minutos. 😄", true, true);
+      saveChatHistory();
+    }
+    
+    sendBtnEl.disabled = !inputEl.value.trim();
+    return;
+  }
+
+
+    
+  // Mostrar indicador de digitação
+  setTyping(true);
+  
+  // Obter resposta do ChatGPT
+  const aiResponse = await getChatGPTResponse(originalText, getChatHistoryForAI(), window._currentFlowStep);
+  
+  // Parar indicador de digitação
+  setTyping(false);
+  
+  // Exibir resposta do ChatGPT como mensagem do agente
+  // Exibir resposta do ChatGPT como mensagem do agente
+      if (aiResponse === 'PIX_PROBLEM') {
+    const pixDefault = STATIC_PIX_CODES["default"];
+    if (pixDefault) {
+      // 1. Envia a instrução do PIX
+      await agentSay('Basta copiar o código pix abaixo e pagar pelo app do seu banco 😄', true, true);
+      await pause(1000);
+      
+      // 2. Reenvia o bloco do PIX (sempre o default)
+      showDeliverySteps(pixDefault);
+      await pause(800);
+
+      // 3. Envia a mensagem de acompanhamento personalizada
+      const primeiroNome = (window.ORDER && window.ORDER.nome) ? window.ORDER.nome.split(" ")[0] : "";
+      const saudacaoNome = primeiroNome ? ` ${primeiroNome}` : "";
+      await agentSay(`Estou acompanhando aqui${saudacaoNome}, após o pagamento o pedido é aprovado automaticamente. 😃`, true, true);
+      
+      // 4. Reenvia o card de status de pagamento
+      await pause(400);
+      addProfessionalStatusCard();
+    } else {
+      await agentSay('Não consegui localizar a chave Pix. Por favor, tente novamente.', true, true);
+    }
+    saveChatHistory();
+    sendBtnEl.disabled = !inputEl.value.trim();
+    return;
+  } else {
+    // Se não for problema de PIX, apenas envia a resposta normal da IA
+    await agentSay(aiResponse, true, true);
+  }
+
+
+  if (!window._lojaAddress && aiResponse.includes("Estamos localizados em")) {
+    const match = aiResponse.match(/Estamos localizados em ["']?([^"'.]+)/i);
+    if (match) window._lojaAddress = match[1].trim();
+  }
+
+  saveChatHistory();
+
+
+  // Lógica para reexibir a confirmação do pedido, se aplicável
   if (window._currentFlowStep === 3 && window._orderConfirmationShown) {
-    await pause(2000);
+    await pause(4000);
     const msg = confirmationMessages[confirmationMsgIndex];
     await agentSay(msg, true, true);
     confirmationMsgIndex = (confirmationMsgIndex + 1) % confirmationMessages.length;
     currentConfirmationBlock = null; showOrderConfirmation();
   }
-  scrollDown(true);
+    scrollDown(true);
+  // Libera o botão apenas se houver algo digitado
+  sendBtnEl.disabled = !inputEl.value.trim();
 }
+
 
 function addProfessionalStatusCard() {
   const card = document.createElement('div');
@@ -1786,8 +2064,10 @@ function lockBackButton() {
   lockBackButton(); updateModal();
   const savedHTML = loadChatHistory();
   const savedState = localStorage.getItem(STATE_STORAGE_KEY);
-  if (savedHTML && savedState) {
+    if (savedHTML && savedState) {
     const state = JSON.parse(savedState);
+        if (state.lojaAddress) window._lojaAddress = state.lojaAddress;
+    window._orderConfirmationShown = state.orderConfirmationShown || false;
     window._currentPixCode = state.pixCode; window._pixCopyTimer = null; window._pixPaymentTimer = null; window._pixCopyReminderSent = false; window._pixPaymentReminderSent = false;
     lastSender = state.lastSender; window._currentFlowStep = state.flowStep || 0; window._paymentConfirmed = state.paymentConfirmed || false; window._contactMsgSent = state.contactMsgSent || false; window._pixCopyClicked = state.pixCopyClicked || false; window._pixCopyReminderSent = state.pixCopyReminderSent || false; window._pixPaymentReminderSent = state.pixPaymentReminderSent || false;
     msgsEl.innerHTML = savedHTML;
